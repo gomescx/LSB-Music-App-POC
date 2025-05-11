@@ -1,10 +1,57 @@
+# filepath: /Users/claudiogomes/Desktop/Github/Nenel-Cards-Music-App/.gitignore
 # Python-generated files
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
+*.egg
 
 # Virtual environments
-.venv
+.venv/
+venv/
+ENV/
+
+# Database files
+data/*.db
+*.sqlite3
+*.db
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+.coverage
+htmlcov/
+
+# Local configuration
+.env
+.env.local
+
+# Session data (as per your project structure)
+sessions/
+
+# Exports (as per your project structure)
+exports/
+
+# Keep directory structures but ignore content
+data/*
+!data/.gitkeep
+sessions/*
+!sessions/.gitkeep
+exports/*
+!exports/.gitkeep
+docs/*
+!docs/.gitkeep
+

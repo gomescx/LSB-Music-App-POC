@@ -33,10 +33,16 @@ uv pip install -r requirements.txt  # Optional: if you include fallback reqs fil
 Or simply install dependencies directly:
 
 ```bash
-uv pip install streamlit pandas python-docx
+uv pip install streamlit pandas python-docx openpyxl
 ```
 
-### 🚀 3. Run the App Locally
+### 🏗️ 3. Initialize the Database
+
+```bash
+uv run python app/scripts/init_database.py
+```
+
+### 🚀 4. Run the App Locally
 
 ```bash
 uv run streamlit run app/main.py
@@ -51,12 +57,23 @@ nenel-music-app/
 │
 ├── app/
 │   ├── main.py            # Streamlit entry point
-│   ├── data_loader.py     # Functions to load CSVs and catalogue
+│   ├── data_loader.py     # Functions to load Excel data into SQLite database
 │   ├── ui.py              # Layout logic for song selection & previews
 │   ├── persistence.py     # Save/load session logic
 │   ├── exporter.py        # DOCX and playlist file generation
+│   ├── db/                # Database module
+│   │   ├── __init__.py    
+│   │   ├── schema.py      # Database schema definition
+│   │   └── queries.py     # Database query functions
+│   └── scripts/           # Utility scripts
+│       ├── init_database.py     # Initialize database from Excel
+│       ├── check_database.py    # Check database contents
+│       └── examine_excel.py     # Examine Excel structure
 │
-├── music_catalogue/       # Flatfile spreadsheet (CSV or Excel)
+├── data/                  # SQLite database storage
+├── docs/                  # Documentation
+├── input/                 # Input data files
+│   └── LSB_Base_flatfile.xlsx  # Source Excel file
 ├── music_files/           # Local folder with .mp3 or .m4a song files
 ├── sessions/              # Where saved session JSON files go
 ├── exports/               # Output directory for DOCX and playlists
