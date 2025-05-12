@@ -52,6 +52,6 @@ sessions/*
 !sessions/.gitkeep
 exports/*
 !exports/.gitkeep
-docs/*
-!docs/.gitkeep
+# Don't ignore docs content
+!docs/*.md
 
