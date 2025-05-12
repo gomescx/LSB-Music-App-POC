@@ -5,6 +5,8 @@ Database schema definition for the LSB Music App.
 import sqlite3
 import os
 from pathlib import Path
+import uuid
+from datetime import datetime
 
 # Database path
 DB_PATH = Path(__file__).parent.parent.parent / "data" / "lsb_catalogue.db"
@@ -55,39 +57,68 @@ CREATE TABLE IF NOT EXISTS exercise_music_mapping (
     FOREIGN KEY (exercise_id) REFERENCES exercises(id),
     FOREIGN KEY (music_ref) REFERENCES musics(music_ref)
 );
+
+-- Sessions table for storing metadata about saved sessions
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,                 -- UUID for the session
+    name TEXT NOT NULL,                  -- Name of the session
+    description TEXT,                    -- Description of the session
+    date TEXT,                           -- Date of the session (YYYY-MM-DD)
+    tags TEXT,                           -- Comma-separated tags (#tag format)
+    created_at TEXT NOT NULL,            -- Creation timestamp
+    updated_at TEXT NOT NULL,            -- Last update timestamp
+    version INTEGER DEFAULT 1            -- Version for conflict detection
+);
+
+-- Session exercises for storing the exercises in a session with their order
+CREATE TABLE IF NOT EXISTS session_exercises (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Auto-incrementing ID
+    session_id TEXT,                      -- UUID of the parent session
+    sequence_number INTEGER,              -- Order in the session
+    exercise_id TEXT,                     -- Reference to the exercise
+    music_ref TEXT,                       -- Reference to the selected music (nullable)
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (exercise_id) REFERENCES exercises(id),
+    FOREIGN KEY (music_ref) REFERENCES musics(music_ref)
+);
 """
+
 
 def init_db():
     """Initialize the database by creating required tables if they don't exist."""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    
+
     conn = None
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        
+
         # Create tables
         cursor.executescript(CREATE_TABLES_SQL)
-        
+
         conn.commit()
         print(f"Database initialized at {DB_PATH}")
         return True
-    
+
     except sqlite3.Error as e:
         if conn:
             conn.rollback()
         print(f"Database error: {e}")
         return False
-    
+
     finally:
         if conn:
             conn.close()
 
+
 def get_db_connection():
     """Get a connection to the database."""
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # This enables column access by name: row['column_name']
+    conn.row_factory = (
+        sqlite3.Row
+    )  # This enables column access by name: row['column_name']
     return conn
+
 
 if __name__ == "__main__":
     # Initialize the database when this module is run directly

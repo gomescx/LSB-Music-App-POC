@@ -44,7 +44,13 @@ uv pip install streamlit pandas python-docx openpyxl
 uv run python app/scripts/init_database.py
 ```
 
-### 🚀 4. Run the App Locally
+### 🔄 4. Update Database Schema (for Session Management)
+
+```bash
+uv run python app/scripts/update_schema.py
+```
+
+### 🚀 5. Run the App Locally
 
 ```bash
 uv run streamlit run app/main.py
@@ -88,6 +94,25 @@ lsb-music-app/
 - Use `uv run` before any script/Streamlit call to ensure env consistency.
 - Prefer relative file paths and keep `music_files/` in project root.
 - If using `.env` or config files, don't forget to `.gitignore` them.
+
+## ✨ Features
+
+### Current Features
+
+- **Exercise Browsing**: Filter exercises by phase (1-5) or see all
+- **Session Building**: Create a sequence of exercises with drag-and-drop reordering
+- **Session Management**: Save sessions with metadata (name, date, description, tags)
+- **Auto-save**: Changes are automatically saved to prevent data loss
+
+### Session Management
+
+The app now includes session persistence with the following capabilities:
+
+- Add session metadata (name, description, date, tags)
+- Auto-save functionality to prevent data loss
+- Load previously saved sessions
+- Delete unwanted sessions
+- Conflict detection to prevent accidental overwrites
 
 ## 📚 Roadmap
 

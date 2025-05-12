@@ -6,6 +6,7 @@ import streamlit as st
 import sys
 from typing import List, Dict, Tuple, Optional, Any
 from pathlib import Path
+from datetime import datetime
 
 # Add the project root to Python path
 project_root = str(Path(__file__).parent.parent)
@@ -13,12 +14,23 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from app.db.queries import get_all_exercises, get_exercises_by_phase
+from app.sessions import (
+    initialize_session_metadata,
+    mark_session_changed,
+    setup_autosave,
+)
 
 
 def initialize_session_state():
     """Initialize session state variables if they don't exist."""
     if "session_exercises" not in st.session_state:
         st.session_state.session_exercises = []
+
+    # Initialize session metadata
+    initialize_session_metadata()
+
+    # Setup autosave functionality
+    setup_autosave()
 
 
 def add_exercise_to_session(exercise: Dict):
@@ -36,6 +48,9 @@ def add_exercise_to_session(exercise: Dict):
 
     # Add to session state
     st.session_state.session_exercises.append(exercise_tuple)
+
+    # Mark session as changed for autosave
+    mark_session_changed()
 
 
 def move_exercise_up(index: int):
@@ -55,6 +70,9 @@ def move_exercise_up(index: int):
             st.session_state.session_exercises[index],
         )
 
+        # Mark session as changed for autosave
+        mark_session_changed()
+
 
 def move_exercise_down(index: int):
     """
@@ -73,6 +91,9 @@ def move_exercise_down(index: int):
             st.session_state.session_exercises[index],
         )
 
+        # Mark session as changed for autosave
+        mark_session_changed()
+
 
 def remove_exercise(index: int):
     """
@@ -82,6 +103,9 @@ def remove_exercise(index: int):
         index: The index of the exercise to remove
     """
     st.session_state.session_exercises.pop(index)
+
+    # Mark session as changed for autosave
+    mark_session_changed()
 
 
 def render_exercise_selector(phase: str = "All"):

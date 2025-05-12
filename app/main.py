@@ -16,6 +16,10 @@ from app.ui import (
     render_exercise_selector,
     render_session_list,
 )
+from app.sessions import (
+    render_session_metadata_ui,
+    render_session_list_ui,
+)
 
 
 def main():
@@ -56,6 +60,10 @@ def main():
         # Session control buttons
         if st.button("Clear Session"):
             st.session_state.session_exercises = []
+            # Mark session changed for autosave
+            from app.sessions import mark_session_changed
+
+            mark_session_changed()
             st.rerun()
 
     # Main area - two columns
@@ -67,9 +75,24 @@ def main():
         if exercise_added:
             st.rerun()
 
-    # Right column - Session list
+    # Right column - Session list and metadata
     with col2:
+        # Session list first
         render_session_list()
+
+        # Add a separator
+        st.markdown("---")
+
+        # Then session metadata
+        if render_session_metadata_ui():
+            st.rerun()
+
+        # Add another separator
+        st.markdown("---")
+
+        # Show saved sessions for loading
+        if render_session_list_ui():
+            st.rerun()
 
 
 if __name__ == "__main__":
