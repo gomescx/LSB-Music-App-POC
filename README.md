@@ -1,7 +1,9 @@
 
-# Nenel Music App – POC
+# LSB Music App – POC
 
-A lightweight local web app to help Biodanza teachers assemble, preview, and manage music sessions using Nenel's card system and a local music catalogue.
+A lightweight local web app to help Biodanza teachers assemble, preview, and manage music sessions using the official LSB exercise-to-music catalogue stored in an Excel workbook".enel Music App – POC
+
+A lightweight local web app to help Biodanza teachers assemble, preview, and manage music sessions using the official LSB exercise-to-music catalogue stored in an Excel workbook”.
 
 ## 🧰 Tech Stack
 
@@ -18,8 +20,8 @@ This project uses `uv` to manage dependencies. No `venv`, `requirements.txt`, or
 ### 📦 1. Clone the Repository
 
 ```bash
-git clone "https://dev.azure.com/BiodanzaAustralia/_git/Nenel%20Cards%20Music%20App"
-cd "Nenel Cards Music App"
+git clone "https://dev.azure.com/BiodanzaAustralia/_git/LSB%20Music%20App"
+cd "LSB-Music-App"
 
 ````
 
@@ -53,7 +55,7 @@ uv run streamlit run app/main.py
 ## 📁 Folder Structure
 
 ```
-nenel-music-app/
+lsb-music-app/
 │
 ├── app/
 │   ├── main.py            # Streamlit entry point
@@ -82,18 +84,17 @@ nenel-music-app/
 
 ## 🧪 Development Tips
 
-* Use `uv pip install <package>` to add new dependencies.
-* Use `uv run` before any script/Streamlit call to ensure env consistency.
-* Prefer relative file paths and keep `music_files/` in project root.
-* If using `.env` or config files, don't forget to `.gitignore` them.
+- Use `uv pip install <package>` to add new dependencies.
+- Use `uv run` before any script/Streamlit call to ensure env consistency.
+- Prefer relative file paths and keep `music_files/` in project root.
+- If using `.env` or config files, don't forget to `.gitignore` them.
 
 ## 📚 Roadmap
 
 Planned features:
 
-* ✅ Exercise/song filtering based on Nenel cards
-* ✅ In-app audio preview and song selection
-* ✅ Session saving and reloading
-* 🔜 Session export to Word and playlist files
-* 🔜 Song flow analysis / transition preview
-
+- ✅ Exercise/song filtering based on LSB catalogue
+- ✅ In-app audio preview and song selection
+- ✅ Session saving and reloading
+- 🔜 Session export to Word and playlist files
+- 🔜 Song flow analysis / transition preview

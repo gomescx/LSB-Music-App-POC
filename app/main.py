@@ -1,5 +1,5 @@
 def main():
-    print("Hello from nenel-cards-music-app!")
+    print("Hello from lsb-music-app!")
 
 
 if __name__ == "__main__":

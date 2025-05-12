@@ -1,7 +1,7 @@
 [project]
-name = "nenel-cards-music-app"
+name = "lsb-music-app"
 version = "0.1.0"
-description = "Add your description here"
+description = "A lightweight local web app to help Biodanza teachers assemble, preview, and manage music sessions"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
