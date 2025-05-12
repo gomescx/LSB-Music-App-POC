@@ -1,0 +1,22 @@
+﻿ID,Work Item Type,Title,Description,State,Acceptance Criteria
+"59","User Story","Export Session (Word + Playlist)","As a facilitator, I want to export the session to a Word document and text playlist, so that I can print or manually transfer it to Apple Music.
+
+Acceptance Criteria:
+- Export a DOCX file with table: Exercise name, Vivencia Line, Selected Song.
+- Export a .txt or .csv with the ordered song filenames for easy Apple Music manual playlist creation.","New",
+"65","User Story","Load LSB Catalogue","<div>As a facilitator, I want the app to contain the official LSB catalogue from a structured LSB Excel workbook, </div><div>so that I can browse official exercises and access their associated songs and phase information.&nbsp; </div><div><br> </div><div>Acceptance Criteria: </div><div><ul><li>LSB Excel workbook data is persistently stored into the app </li><li>The 4 spreadsheets: Musics, Exercises-to-Musics, Exercises, Exercise-Categories are structured in a relational database for in-app consumption <br> </li> </ul> </div>","Closed",
+"69","User Story","Select and Sequence Exercises via UI","<p><strong>As a</strong> facilitator,<br> </p><p><strong>I want</strong> to build a session by selecting exercises from the LSB catalogue and sequencing them,<br><strong>So that</strong> I can design my class structure directly in the app without using external files. </p><br>","Closed","<div><p><strong>Acceptance Criteria</strong>: </p><ul><li><p>The app displays exercises filtered by user-selected phase (1–5 or all). </p> </li><li><p>User can select an exercise and add it to the session with one click. </p> </li><li><p>Exercises are added as tuples: (exercise code + name, music = blank by default). </p> </li><li><p>Session list supports dynamic reordering of exercises. </p> </li><li><p>Sequence numbers adjust automatically to reflect current order. </p> </li> </ul><br> </div>"
+"73","User Story","Select and Preview Song per Exercise","As a facilitator, I want to preview and assign one song per exercise from a pre-filtered list, so that I can ensure musical flow and appropriateness before exporting the session.
+
+Acceptance Criteria:
+- When an exercise is added to a session, show associated songs.
+- Let user click to play audio inline from local files.
+- Let user assign a selected song to that exercise.
+- Final session list includes each exercise with chosen song.","New",
+"77","User Story","Save and Load Past Sessions","As a facilitator, I want to save my built session and reload it later, so that I can avoid rebuilding sessions from scratch and maintain a reusable archive.
+
+Acceptance Criteria:
+- Save current session to structured local file (JSON/CSV).
+- Display list of past sessions in a dropdown.
+- Load and restore session details into the UI.","New",
+"81","User Story","Add Metadata and Persist Session","<div><p><strong>As a</strong> facilitator,<br><strong>I want</strong> to name and tag the session and save it with a unique ID,<br><strong>So that</strong> I can retrieve and reuse past sessions later. </p><p><strong>Acceptance Criteria</strong>: </p><ul><li><p>User can enter session name, description, and tags (#tag format). </p> </li><li><p>Date field is prefilled with today’s date but editable. </p> </li><li><p>App generates a unique session ID (e.g., UUID or timestamp-based). </p> </li><li><p>Session data is saved to a local SQLite DB or JSON file. </p> </li><li><p>The data includes all exercises (in order) and placeholder for music selections. </p> </li> </ul><br> </div>","New",
