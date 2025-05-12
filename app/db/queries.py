@@ -229,6 +229,37 @@ def get_music_by_ref(music_ref):
         conn.close()
 
 
+def get_songs_for_exercise(exercise_id):
+    """
+    Get all songs associated with a specific exercise with detailed metadata.
+
+    Args:
+        exercise_id: The ID of the exercise
+
+    Returns:
+        List of song dictionaries with metadata
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT 
+                m.music_ref, m.title, m.artist, m.bpm, m.duration, m.filename,
+                m.collection_cd, em.recommendation, em.specific_comment
+            FROM musics m
+            JOIN exercise_music_mapping em ON m.music_ref = em.music_ref
+            WHERE em.exercise_id = ?
+            ORDER BY em.recommendation DESC, m.title
+            """,
+            (exercise_id,),
+        )
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
 # Session management functions
 
 
@@ -238,7 +269,7 @@ def save_session(session_data, session_exercises):
 
     Args:
         session_data: Dict with session metadata (id, name, description, date, tags)
-        session_exercises: List of tuples (exercise_name, music_ref) in sequence
+        session_exercises: List of tuples (exercise_name, music_ref, exercise_id) in sequence
 
     Returns:
         Tuple of (success, message, session_id)
@@ -334,11 +365,16 @@ def save_session(session_data, session_exercises):
             )
 
         # Insert the session exercises
-        for i, (exercise_name, music_ref) in enumerate(session_exercises):
-            # Extract exercise ID from the exercise_name format "Name [id ID]"
-            exercise_id = None
-            if "[id " in exercise_name:
-                exercise_id = exercise_name.split("[id ")[1].split("]")[0].strip()
+        for i, exercise_tuple in enumerate(session_exercises):
+            # Handle both 2-element legacy tuples and 3-element new tuples
+            if len(exercise_tuple) == 3:
+                exercise_name, music_ref, exercise_id = exercise_tuple
+            else:
+                exercise_name, music_ref = exercise_tuple
+                # Extract exercise ID from the exercise_name format "Name [id ID]"
+                exercise_id = None
+                if "[id " in exercise_name:
+                    exercise_id = exercise_name.split("[id ")[1].split("]")[0].strip()
 
             cursor.execute(
                 """
@@ -401,7 +437,14 @@ def get_session_by_id(session_id):
                 if ex["name"]
                 else "Unknown Exercise"
             )
-            session_exercises.append((exercise_name, ex["music_ref"]))
+            # Create tuple with three elements: exercise name, music ref, and exercise ID
+            session_exercises.append(
+                (
+                    exercise_name,
+                    ex["music_ref"],
+                    ex["exercise_id"],  # Store the exercise ID for song retrieval
+                )
+            )
 
         return dict(session_data), session_exercises
 
