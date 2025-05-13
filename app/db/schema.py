@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS musics (
     title TEXT,                          -- Music Title (Movement Name tag)
     artist TEXT,                         -- Music Artist (Artist tag)
     duration TEXT,                       -- Time
-    v INTEGER,                           -- V
-    c INTEGER,                           -- C
-    a INTEGER,                           -- A
-    s INTEGER,                           -- S
-    t INTEGER,                           -- T
+    v TEXT,                              -- V
+    c TEXT,                              -- C
+    a TEXT,                              -- A
+    s TEXT,                              -- S
+    t TEXT,                              -- T
     bpm INTEGER                          -- BPM
 );
 
