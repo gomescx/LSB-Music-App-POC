@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS session_exercises (
     sequence_number INTEGER,              -- Order in the session
     exercise_id TEXT,                     -- Reference to the exercise
     music_ref TEXT,                       -- Reference to the selected music (nullable)
+    notes TEXT,                           -- Notes for this exercise in the session
     FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE,
     FOREIGN KEY (exercise_id) REFERENCES exercises(id),
     FOREIGN KEY (music_ref) REFERENCES musics(music_ref)

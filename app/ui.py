@@ -35,6 +35,36 @@ def initialize_session_state():
     """Initialize session state variables if they don't exist."""
     if "session_exercises" not in st.session_state:
         st.session_state.session_exercises = []
+    else:
+        # Ensure all exercise tuples have the correct structure (with notes)
+        for i, exercise_tuple in enumerate(st.session_state.session_exercises):
+            if len(exercise_tuple) < 4:
+                # Extract existing data
+                if len(exercise_tuple) == 3:
+                    exercise_name, music_ref, exercise_id = exercise_tuple
+                    # Add empty notes to the tuple
+                    st.session_state.session_exercises[i] = (
+                        exercise_name,
+                        music_ref,
+                        exercise_id,
+                        "",  # Empty notes
+                    )
+                # Handle legacy 2-element tuples if any exist
+                elif len(exercise_tuple) == 2:
+                    exercise_name, music_ref = exercise_tuple
+                    # Extract ID from name if possible
+                    exercise_id = None
+                    if "[id " in exercise_name:
+                        exercise_id = (
+                            exercise_name.split("[id ")[1].split("]")[0].strip()
+                        )
+                    # Create new tuple with proper structure
+                    st.session_state.session_exercises[i] = (
+                        exercise_name,
+                        music_ref,
+                        exercise_id,
+                        "",  # Empty notes
+                    )
 
     if "open_expanders" not in st.session_state:
         st.session_state.open_expanders = set()
@@ -53,11 +83,12 @@ def add_exercise_to_session(exercise: Dict):
     Args:
         exercise: The exercise to add (dict from database)
     """
-    # Create a tuple with exercise info, empty music placeholder, and the exercise ID
+    # Create a tuple with exercise info, empty music placeholder, exercise ID, and empty notes
     exercise_tuple = (
         f"{exercise['name']} [id {exercise['id']}]",
         None,  # Music is None (blank) by default
         exercise["id"],  # Store the exercise ID for song retrieval
+        "",  # Notes start as empty string
     )
 
     # Add to session state
@@ -205,8 +236,8 @@ def render_session_list():
     # Calculate session stats (songs selected and total time)
     total_songs = sum(
         1
-        for _, song_ref, _ in st.session_state.session_exercises
-        if song_ref is not None
+        for exercise_tuple in st.session_state.session_exercises
+        if exercise_tuple[1] is not None  # song_ref is at index 1
     )
     total_exercises = len(st.session_state.session_exercises)
 
@@ -214,7 +245,11 @@ def render_session_list():
     total_minutes = 0
     total_seconds = 0
 
-    for _, song_ref, exercise_id in st.session_state.session_exercises:
+    for exercise_tuple in st.session_state.session_exercises:
+        # Extract song_ref and exercise_id from tuple (indexes 1 and 2)
+        song_ref = exercise_tuple[1]
+        exercise_id = exercise_tuple[2]
+
         if song_ref is not None:
             songs = get_songs_for_exercise(exercise_id)
             song_details = next(
@@ -246,7 +281,20 @@ def render_session_list():
 
     # Display each exercise with controls
     for i, exercise_tuple in enumerate(st.session_state.session_exercises):
-        exercise_name, selected_song, exercise_id = exercise_tuple
+        # Handle different tuple structures (with and without notes)
+        if len(exercise_tuple) >= 4:
+            exercise_name, selected_song, exercise_id, exercise_notes = exercise_tuple
+        else:
+            exercise_name, selected_song, exercise_id = exercise_tuple
+            exercise_notes = ""  # Default empty notes
+
+            # Immediately update the tuple to include notes to prevent data loss
+            st.session_state.session_exercises[i] = (
+                exercise_name,
+                selected_song,
+                exercise_id,
+                exercise_notes,
+            )
 
         # Get songs for this exercise
         songs = get_songs_for_exercise(exercise_id)
@@ -409,15 +457,48 @@ def render_session_list():
                         st.session_state.open_expanders = set()
                     st.session_state.open_expanders.add(expander_key)
 
-                    # Update the tuple with the new song reference
+                    # Get notes from the tuple (should be at index 3)
+                    # If not available, use empty string
+                    notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
+
+                    # Update the tuple with the new song reference and preserve notes
                     st.session_state.session_exercises[i] = (
                         exercise_name,
                         new_song_ref,
                         exercise_id,
+                        notes,
                     )
                     mark_session_changed()
                     # Immediately rerun to update the UI
                     st.rerun()
+
+                # Add notes text area for this exercise
+                st.write("### Notes")
+                notes_value = st.text_area(
+                    "Add personal cues, observations, or choreography instructions:",
+                    value=exercise_notes,
+                    key=f"notes_{i}_{exercise_id}",
+                    height=100,
+                )
+
+                # Update notes in session state if changed
+                if notes_value != exercise_notes:
+                    # Ensure this expander stays open after rerun
+                    expander_key = f"expander_{i}_{exercise_id}"
+                    if "open_expanders" not in st.session_state:
+                        st.session_state.open_expanders = set()
+                    st.session_state.open_expanders.add(expander_key)
+
+                    # Update the tuple with new notes
+                    st.session_state.session_exercises[i] = (
+                        exercise_name,
+                        selected_song,
+                        exercise_id,
+                        notes_value,
+                    )
+                    mark_session_changed()
+
+                st.write("---")
 
                 # Show song details if a song is selected
                 if selected_song:

@@ -401,11 +401,15 @@ def save_session(session_data, session_exercises):
 
         # Insert the session exercises
         for i, exercise_tuple in enumerate(session_exercises):
-            # Handle both 2-element legacy tuples and 3-element new tuples
-            if len(exercise_tuple) == 3:
+            # Handle different tuple lengths (2, 3, or 4 elements)
+            if len(exercise_tuple) >= 4:
+                exercise_name, music_ref, exercise_id, notes = exercise_tuple
+            elif len(exercise_tuple) == 3:
                 exercise_name, music_ref, exercise_id = exercise_tuple
+                notes = ""  # Default empty notes
             else:
                 exercise_name, music_ref = exercise_tuple
+                notes = ""  # Default empty notes
                 # Extract exercise ID from the exercise_name format "Name [id ID]"
                 exercise_id = None
                 if "[id " in exercise_name:
@@ -414,10 +418,10 @@ def save_session(session_data, session_exercises):
             cursor.execute(
                 """
                 INSERT INTO session_exercises
-                (session_id, sequence_number, exercise_id, music_ref)
-                VALUES (?, ?, ?, ?)
+                (session_id, sequence_number, exercise_id, music_ref, notes)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (session_id, i + 1, exercise_id, music_ref),
+                (session_id, i + 1, exercise_id, music_ref, notes),
             )
 
         conn.commit()
@@ -472,12 +476,19 @@ def get_session_by_id(session_id):
                 if ex["name"]
                 else "Unknown Exercise"
             )
-            # Create tuple with three elements: exercise name, music ref, and exercise ID
+            # Create tuple with four elements: exercise name, music ref, exercise ID, and notes
+            # Check if the notes column exists and has a value
+            try:
+                notes = ex["notes"] if ex["notes"] is not None else ""
+            except (IndexError, KeyError):
+                notes = ""
+
             session_exercises.append(
                 (
                     exercise_name,
                     ex["music_ref"],
                     ex["exercise_id"],  # Store the exercise ID for song retrieval
+                    notes,  # Include notes
                 )
             )
 
