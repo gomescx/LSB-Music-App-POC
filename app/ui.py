@@ -4,9 +4,14 @@ UI components and helper functions for the LSB Music App.
 
 import streamlit as st
 import sys
+import os
 from typing import List, Dict, Tuple, Optional, Any
 from pathlib import Path
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the project root to Python path
 project_root = str(Path(__file__).parent.parent)
@@ -352,6 +357,34 @@ def render_session_list():
                     )
 
                     if song_details:
+
+                        # Generate the file path
+                        file_path = get_song_file_path(song_details)
+
+                        # Create a container for audio player with consistent height
+                        audio_container = st.container()
+
+                        # Add audio player if a valid file path exists
+                        if file_path and not file_path.startswith("No music file"):
+                            # Check if the file actually exists on disk
+                            if os.path.exists(file_path):
+                                try:
+                                    with st.spinner("Loading audio..."):
+                                        audio_container.audio(
+                                            file_path, format="audio/*"
+                                        )
+                                except Exception as e:
+                                    audio_container.error(
+                                        f"Error playing audio: {str(e)}"
+                                    )
+                            else:
+                                audio_container.warning(
+                                    f"Audio file not found at location: `{os.path.basename(file_path)}`"
+                                )
+                        else:
+                            audio_container.warning(
+                                "No audio file available for this song"
+                            )
                         st.write("###### Song Details:")
                         st.write(f"• **Title:** {song_details['title']}")
 
@@ -368,8 +401,7 @@ def render_session_list():
                             st.write(f"• **Duration:** {song_details['duration']}")
                             st.write(f"• **BPM:** {song_details['bpm']}")
 
-                        # Generate and display simulated file path
-                        file_path = get_song_file_path(song_details)
+                        # Display file path
                         st.write(f"• **File path:** `{file_path}`")
 
         # # Add a separator line between exercises for better visual separation
@@ -378,8 +410,7 @@ def render_session_list():
 
 def get_song_file_path(song_details):
     """
-    Generate a simulated file path for a song based on its metadata.
-    This is a placeholder function that will be replaced in Task 2.
+    Generate a file path for a song based on its metadata and the MUSIC_LIBRARY_PATH.
 
     Args:
         song_details: Dictionary containing song metadata from the database
@@ -389,6 +420,9 @@ def get_song_file_path(song_details):
     """
     if not song_details:
         return None
+
+    # Get music library path from environment variables
+    music_library_path = os.getenv("MUSIC_LIBRARY_PATH")
 
     # Generate a predictable path based on metadata
     # Use dictionary-style access for sqlite3.Row objects
@@ -401,8 +435,13 @@ def get_song_file_path(song_details):
     filename = song_details["filename"] if song_details["filename"] else ""
     filename = filename.replace(" ", "_")
 
-    # If we have a filename use it, otherwise construct from title and artist
+    # If we have a filename use it, otherwise provide a message
+    # indicating no file is available
     if filename:
-        return f"/music_files/{filename}"
+        # Use the music library path from .env
+        if music_library_path:
+            return os.path.join(music_library_path, filename)
+        else:
+            return f"/sample_music_files/{filename}"
     else:
-        return f"/music_files/{artist}/{title}.mp3"
+        return f"No music file available for {title} by {artist}"
