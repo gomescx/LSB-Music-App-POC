@@ -53,6 +53,32 @@ def main():
             key="name_filter",
         )
 
+        # Song filter (new feature)
+        st.markdown("### Song Filter")
+        st.caption("Find exercises associated with specific songs")
+        song_filter = st.text_input(
+            "Filter by song:",
+            help="Type part of a song title or artist name to find matching exercises",
+            key="song_filter",
+            placeholder="Enter song title or artist name...",
+        )
+
+        # Show info about song-based filtering
+        if st.session_state.get("song_filter", "").strip():
+            # Count exercises that match the filter
+            from app.db.queries import get_exercises_by_song_name
+
+            exercises = get_exercises_by_song_name(st.session_state.song_filter)
+            count = len(exercises) if exercises else 0
+            st.info(
+                f"Found {count} exercises related to '{st.session_state.song_filter}'"
+            )
+
+            # Clear song filter button
+            if st.button("Clear Song Filter"):
+                st.session_state.song_filter = ""
+                st.rerun()
+
         # Session info
         st.header("Session Details")
         st.write(f"Exercises in session: {len(st.session_state.session_exercises)}")

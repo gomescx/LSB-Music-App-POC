@@ -22,6 +22,7 @@ from app.db.queries import (
     get_all_exercises,
     get_exercises_by_phase,
     get_songs_for_exercise,
+    get_exercises_by_song_name,
 )
 from app.sessions import (
     initialize_session_metadata,
@@ -133,11 +134,21 @@ def render_exercise_selector(phase: str = "All"):
     """
     st.subheader("Available Exercises")
 
-    # Get exercises based on phase
-    if phase == "All":
-        exercises = get_all_exercises()
+    # Get exercises based on song filter first (highest priority)
+    song_filter = st.session_state.get("song_filter", "").strip()
+    if song_filter:
+        # When filtering by song, we ignore the phase filter
+        exercises = get_exercises_by_song_name(song_filter)
+        # Show a notice that song filter is taking precedence
+        st.info(
+            f"🎵 Showing exercises related to song: '{song_filter}' (phase filter is ignored)"
+        )
     else:
-        exercises = get_exercises_by_phase(float(phase))
+        # If no song filter, apply normal phase filtering
+        if phase == "All":
+            exercises = get_all_exercises()
+        else:
+            exercises = get_exercises_by_phase(float(phase))
 
     # Apply name filter if one is provided
     name_filter = st.session_state.get("name_filter", "").strip().upper()

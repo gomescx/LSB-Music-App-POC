@@ -260,6 +260,41 @@ def get_songs_for_exercise(exercise_id):
         conn.close()
 
 
+def get_exercises_by_song_name(song_name):
+    """
+    Get exercises that are associated with songs matching the given name or vivencia.
+
+    Args:
+        song_name: The song name or vivencia line to search for
+
+    Returns:
+        List of exercises associated with matching songs
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Clean the input and ensure case-insensitive search
+        search_term = song_name.strip()
+
+        # Use LIKE with wildcards for partial matching on both title and artist
+        # SQLite's LIKE is case-insensitive by default
+        cursor.execute(
+            """
+            SELECT DISTINCT e.*
+            FROM exercises e
+            JOIN exercise_music_mapping em ON e.id = em.exercise_id
+            JOIN musics m ON em.music_ref = m.music_ref
+            WHERE m.title LIKE ? OR m.artist LIKE ? OR m.collection_cd LIKE ?
+            ORDER BY e.phase, e.category, e.name
+            """,
+            (f"%{search_term}%", f"%{search_term}%", f"%{search_term}%"),
+        )
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
 # Session management functions
 
 
