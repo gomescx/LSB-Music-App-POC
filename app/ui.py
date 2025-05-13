@@ -35,6 +35,9 @@ def initialize_session_state():
     if "session_exercises" not in st.session_state:
         st.session_state.session_exercises = []
 
+    if "open_expanders" not in st.session_state:
+        st.session_state.open_expanders = set()
+
     # Initialize session metadata
     initialize_session_metadata()
 
@@ -274,7 +277,22 @@ def render_session_list():
         if duration_text:
             expander_title += f"    {duration_text}"
 
-        with st.expander(expander_title, expanded=False):
+        # Check if this expander should be open based on session state
+        if "open_expanders" not in st.session_state:
+            st.session_state.open_expanders = set()
+
+        # Create a unique key for this expander
+        expander_key = f"expander_{i}_{exercise_id}"
+
+        with st.expander(
+            expander_title, expanded=(expander_key in st.session_state.open_expanders)
+        ) as expanded:
+            # Track the expanded state in session state
+            if expanded:
+                st.session_state.open_expanders.add(expander_key)
+            elif expander_key in st.session_state.open_expanders:
+                st.session_state.open_expanders.remove(expander_key)
+
             # First show the exercise name with ID for reference
             st.write(f"**Exercise:** {exercise_name}")
 
@@ -283,6 +301,21 @@ def render_session_list():
 
             with ctrl_col1:
                 if st.button("↑ Move Up", key=f"up_{i}", disabled=(i == 0)):
+                    # Preserve the expanded state for this exercise
+                    if "open_expanders" not in st.session_state:
+                        st.session_state.open_expanders = set()
+                    # Get the exercise above that we're swapping with
+                    if i > 0:
+                        prev_exercise_name, _, prev_exercise_id = (
+                            st.session_state.session_exercises[i - 1]
+                        )
+                        # Mark both expanders as open
+                        st.session_state.open_expanders.add(
+                            f"expander_{i}_{exercise_id}"
+                        )
+                        st.session_state.open_expanders.add(
+                            f"expander_{i-1}_{prev_exercise_id}"
+                        )
                     move_exercise_up(i)
                     st.rerun()
 
@@ -292,11 +325,31 @@ def render_session_list():
                     key=f"down_{i}",
                     disabled=(i == len(st.session_state.session_exercises) - 1),
                 ):
+                    # Preserve the expanded state for this exercise
+                    if "open_expanders" not in st.session_state:
+                        st.session_state.open_expanders = set()
+                    # Get the exercise below that we're swapping with
+                    if i < len(st.session_state.session_exercises) - 1:
+                        next_exercise_name, _, next_exercise_id = (
+                            st.session_state.session_exercises[i + 1]
+                        )
+                        # Mark both expanders as open
+                        st.session_state.open_expanders.add(
+                            f"expander_{i}_{exercise_id}"
+                        )
+                        st.session_state.open_expanders.add(
+                            f"expander_{i+1}_{next_exercise_id}"
+                        )
                     move_exercise_down(i)
                     st.rerun()
 
             with ctrl_col3:
                 if st.button("✕ Remove", key=f"remove_{i}"):
+                    # Clean up the expander state for this exercise
+                    if "open_expanders" in st.session_state:
+                        expander_key = f"expander_{i}_{exercise_id}"
+                        if expander_key in st.session_state.open_expanders:
+                            st.session_state.open_expanders.remove(expander_key)
                     remove_exercise(i)
                     st.rerun()
 
@@ -339,6 +392,12 @@ def render_session_list():
                 # Update the session state when a song is selected
                 new_song_ref = song_options[selected_option]
                 if new_song_ref != selected_song:
+                    # Ensure this expander stays open after rerun
+                    expander_key = f"expander_{i}_{exercise_id}"
+                    if "open_expanders" not in st.session_state:
+                        st.session_state.open_expanders = set()
+                    st.session_state.open_expanders.add(expander_key)
+
                     # Update the tuple with the new song reference
                     st.session_state.session_exercises[i] = (
                         exercise_name,
