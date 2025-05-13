@@ -36,7 +36,7 @@ def main():
 
     # Sidebar for filtering and controls
     with st.sidebar:
-        st.header("Filters")
+        st.header("Exercise Filters")
 
         # Phase selector
         phase_options = ["All", "1", "2", "3", "4", "5"]
@@ -54,7 +54,7 @@ def main():
         )
 
         # Session info
-        st.header("Session")
+        st.header("Session Details")
         st.write(f"Exercises in session: {len(st.session_state.session_exercises)}")
 
         # Session control buttons
@@ -66,17 +66,26 @@ def main():
             mark_session_changed()
             st.rerun()
 
-    # Main area - two columns
-    col1, col2 = st.columns([1, 1])
+        # Toggle for exercise selector visibility
+        if "show_exercise_selector" not in st.session_state:
+            st.session_state.show_exercise_selector = True
 
-    # Left column - Exercise selector
-    with col1:
-        exercise_added = render_exercise_selector(selected_phase)
-        if exercise_added:
-            st.rerun()
+        # Create a callback for the checkbox
+        def toggle_exercise_selector():
+            st.session_state.show_exercise_selector = (
+                not st.session_state.show_exercise_selector
+            )
 
-    # Right column - Session list and metadata
-    with col2:
+        # Use the checkbox with on_change callback
+        st.checkbox(
+            "Show Exercise Selector",
+            value=st.session_state.show_exercise_selector,
+            key="show_exercise_selector_checkbox",
+            on_change=toggle_exercise_selector,
+        )
+
+    # Define a helper function for rendering session components
+    def render_session_components():
         # Session list first
         render_session_list()
 
@@ -93,6 +102,24 @@ def main():
         # Show saved sessions for loading
         if render_session_list_ui():
             st.rerun()
+
+    # Conditional layout based on checkbox state
+    if st.session_state.show_exercise_selector:
+        # Two-column layout when exercise selector is shown
+        col1, col2 = st.columns([1, 1])
+
+        # Left column - Exercise selector
+        with col1:
+            exercise_added = render_exercise_selector(selected_phase)
+            if exercise_added:
+                st.rerun()
+
+        # Right column - Session components
+        with col2:
+            render_session_components()
+    else:
+        # Full-width layout when exercise selector is hidden
+        render_session_components()
 
 
 if __name__ == "__main__":
