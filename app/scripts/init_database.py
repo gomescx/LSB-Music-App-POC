@@ -12,6 +12,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from app.data_loader import load_lsb_catalogue
+from app.scripts.add_collections_support import main as run_collection_migration
 
 def main():
     # Path to the Excel file
@@ -29,6 +30,7 @@ def main():
     if load_lsb_catalogue(excel_path):
         db_path = data_dir / "lsb_catalogue.db"
         print(f"LSB catalogue loaded successfully to {db_path}!")
+        run_collection_migration()  # Run the migration after loading
         return True
     else:
         print("Failed to load LSB catalogue.")

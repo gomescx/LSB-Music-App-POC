@@ -23,7 +23,7 @@ This project uses `uv` to manage dependencies. No `venv`, `requirements.txt`, or
 git clone "https://dev.azure.com/BiodanzaAustralia/_git/LSB%20Music%20App"
 cd "LSB-Music-App"
 
-````
+```
 
 ### 🧪 2. Initialize the Environment
 
@@ -88,12 +88,12 @@ lsb-music-app/
 └── README.md
 ```
 
-## 🧪 Development Tips
+## 🧪 Copilot Development Tips
 
 - Use `uv pip install <package>` to add new dependencies.
 - Use `uv run` before any script/Streamlit call to ensure env consistency.
 - Prefer relative file paths and keep `music_files/` in project root.
-- If using `.env` or config files, don't forget to `.gitignore` them.
+- Always confirm twice before replacing `.env` config files and don't forget to `.gitignore` them.
 
 ## ✨ Features
 
