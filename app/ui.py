@@ -414,7 +414,7 @@ def render_session_list():
 
             # # Add song selection section
             # st.write("* * *")
-
+            
             if not songs:
                 st.write("No songs available for this exercise.")
             else:
@@ -424,8 +424,9 @@ def render_session_list():
                     for song in songs
                 }
 
-                # Add a "No song selected" option at the top
-                song_options = {"No song selected": None, **song_options}
+                # # Add a "No song selected" option at the top
+                # song_options = {"No song selected": None, **song_options}
+
 
                 # Get the current selection key
                 current_key = "No song selected"
@@ -557,6 +558,9 @@ def render_session_list():
 
         # # Add a separator line between exercises for better visual separation
         # st.markdown("---")
+
+
+# Remove any collection-related UI logic from here if present
 
 
 def get_song_file_path(song_details):
