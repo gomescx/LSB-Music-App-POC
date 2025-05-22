@@ -1,1 +1,2 @@
-add a check box on the side bar to hide column 1 (Available exercises) from the screen.
+As a user I want to change the order of the sequence of a tuple exercise - music on the current session list by assigning a number to that tuple
+So I no longer need to click several times on the Move Up or Move Down buttons

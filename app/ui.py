@@ -367,7 +367,7 @@ def render_session_list():
             st.write(f"**Exercise:** {exercise_name}")
 
             # Add the control buttons at the top in a row for better visibility
-            ctrl_col1, ctrl_col2, ctrl_col3 = st.columns([1, 1, 1])
+            ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([1, 1, 1, 2])
 
             with ctrl_col1:
                 if st.button("↑ Move Up", key=f"up_{i}", disabled=(i == 0)):
@@ -377,15 +377,9 @@ def render_session_list():
                     # Get the exercise above that we're swapping with
                     if i > 0:
                         prev_exercise_tuple = st.session_state.session_exercises[i - 1]
-                        prev_exercise_name = prev_exercise_tuple[0]
                         prev_exercise_id = prev_exercise_tuple[2]
-                        # Mark both expanders as open
-                        st.session_state.open_expanders.add(
-                            f"expander_{i}_{exercise_id}"
-                        )
-                        st.session_state.open_expanders.add(
-                            f"expander_{i-1}_{prev_exercise_id}"
-                        )
+                        st.session_state.open_expanders.add(f"expander_{i}_{exercise_id}")
+                        st.session_state.open_expanders.add(f"expander_{i-1}_{prev_exercise_id}")
                     move_exercise_up(i)
                     st.rerun()
 
@@ -401,15 +395,9 @@ def render_session_list():
                     # Get the exercise below that we're swapping with
                     if i < len(st.session_state.session_exercises) - 1:
                         next_exercise_tuple = st.session_state.session_exercises[i + 1]
-                        next_exercise_name = next_exercise_tuple[0]
                         next_exercise_id = next_exercise_tuple[2]
-                        # Mark both expanders as open
-                        st.session_state.open_expanders.add(
-                            f"expander_{i}_{exercise_id}"
-                        )
-                        st.session_state.open_expanders.add(
-                            f"expander_{i+1}_{next_exercise_id}"
-                        )
+                        st.session_state.open_expanders.add(f"expander_{i}_{exercise_id}")
+                        st.session_state.open_expanders.add(f"expander_{i+1}_{next_exercise_id}")
                     move_exercise_down(i)
                     st.rerun()
 
@@ -421,6 +409,33 @@ def render_session_list():
                         if expander_key in st.session_state.open_expanders:
                             st.session_state.open_expanders.remove(expander_key)
                     remove_exercise(i)
+                    st.rerun()
+
+            # --- Sequence Number Input ---
+            with ctrl_col4:
+                new_position = st.number_input(
+                    "Order",
+                    min_value=1,
+                    max_value=len(st.session_state.session_exercises),
+                    value=i+1,
+                    key=f"order_input_{i}_{exercise_id}",
+                    step=1,
+                )
+                # Only move if the user changed the value and it's not the current position
+                if new_position != i+1:
+                    # Remove the tuple and insert at new position
+                    exercises = st.session_state.session_exercises
+                    tuple_to_move = exercises.pop(i)
+                    # Adjust for 0-based index and shifting after pop
+                    insert_at = new_position - 1
+                    if insert_at > i:
+                        insert_at -= 1
+                    exercises.insert(insert_at, tuple_to_move)
+                    # Keep the expander open for the moved exercise
+                    if "open_expanders" not in st.session_state:
+                        st.session_state.open_expanders = set()
+                    st.session_state.open_expanders.add(f"expander_{insert_at}_{exercise_id}")
+                    mark_session_changed()
                     st.rerun()
 
             # # Add song selection section

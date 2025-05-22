@@ -142,3 +142,34 @@ Add a checkbox in the sidebar to toggle the visibility of Column 1 (Available ex
 ## Notes
 - The checkbox is initialized to `True` by default, ensuring that Column 1 is visible when the app is first loaded.
 - No additional scripts or dependencies were required for this implementation.
+
+---
+
+# Implementation Summary: Direct Sequence Number Assignment for Session Exercises
+
+## Overview
+This update allows users to directly assign a sequence number to any exercise-music tuple in the session list, making reordering much faster and more intuitive than repeatedly clicking "Move Up" or "Move Down".
+
+## Changes Made
+- Added a Streamlit `number_input` inside each exercise expander in the session list UI (`app/ui.py`).
+- When the user changes the number, the corresponding tuple is moved to the new position in the session list.
+- The UI uses 1-based numbering for user-friendliness, but internally manages 0-based indices.
+- The expander for the moved exercise remains open after the change.
+- Session state and autosave logic are triggered as with other reordering actions.
+
+## User Experience
+- Users can now quickly reorder exercises by typing the desired position number.
+- The session list updates immediately, and sequence numbers are always accurate.
+- All previous controls (Move Up, Move Down, Remove) remain available and functional.
+
+## Technical Details
+- The logic ensures that moving an exercise to a new position works correctly regardless of direction (up or down).
+- The expander state is preserved for the moved exercise to avoid UI confusion.
+- The implementation is fully backward compatible and does not affect session data structure or database schema.
+
+## Testing
+- Verified that changing the sequence number moves the exercise to the correct position.
+- Confirmed that the expander for the moved exercise remains open after the change.
+- Ensured that all other session list controls and features continue to work as expected.
+
+---
