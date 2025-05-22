@@ -196,100 +196,10 @@ def setup_autosave():
 
 def render_session_metadata_ui():
     """
-    Render the session metadata UI component.
-
-    Returns:
-        Boolean indicating if the session was saved
+    Deprecated: UI rendering for session metadata is now handled in main.py for better layout control.
+    This function is kept for reference or possible future use as a helper.
     """
-    st.subheader("Session Metadata")
-
-    # Session ID display (if exists)
-    if st.session_state.session_metadata.get("id"):
-        session_id = st.session_state.session_metadata["id"]
-        st.text(f"Session ID: {session_id}")
-
-    # Last saved indicator
-    if st.session_state.session_metadata.get("last_saved"):
-        last_saved = datetime.fromisoformat(
-            st.session_state.session_metadata["last_saved"]
-        )
-        st.text(f"Last saved: {last_saved.strftime('%H:%M:%S')}")
-
-    # Unsaved changes indicator
-    if st.session_state.session_metadata.get("has_unsaved_changes", False):
-        st.warning("⚠️ Unsaved changes")
-
-    # Session name field
-    name = st.text_input(
-        "Session Name*",
-        value=st.session_state.session_metadata.get("name", ""),
-        key="session_name_input",
-    )
-    if name != st.session_state.session_metadata.get("name", ""):
-        st.session_state.session_metadata["name"] = name
-        mark_session_changed()
-
-    # Date field with default to today
-    date_val = st.session_state.session_metadata.get(
-        "date", datetime.now().strftime("%Y-%m-%d")
-    )
-    date = st.date_input(
-        "Session Date",
-        value=datetime.strptime(date_val, "%Y-%m-%d") if date_val else datetime.now(),
-        key="session_date_input",
-    )
-    new_date = date.strftime("%Y-%m-%d")
-    if new_date != st.session_state.session_metadata.get("date", ""):
-        st.session_state.session_metadata["date"] = new_date
-        mark_session_changed()
-
-    # Description field
-    description = st.text_area(
-        "Description",
-        value=st.session_state.session_metadata.get("description", ""),
-        key="session_description_input",
-    )
-    if description != st.session_state.session_metadata.get("description", ""):
-        st.session_state.session_metadata["description"] = description
-        mark_session_changed()
-
-    # Tags field
-    tags = st.text_input(
-        "Tags",
-        value=st.session_state.session_metadata.get("tags", ""),
-        help="Enter tags in #tag format, separated by spaces",
-        key="session_tags_input",
-    )
-    if tags != st.session_state.session_metadata.get("tags", ""):
-        st.session_state.session_metadata["tags"] = tags
-        mark_session_changed()
-
-    # Save button
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("Save Session", key="save_session_button"):
-            success, _, _ = save_current_session(show_message=True)
-            return success
-
-    # Only show clear button if we have an existing session
-    with col2:
-        if st.session_state.session_metadata.get("id"):
-            if st.button("Clear Form", key="clear_session_button"):
-                st.session_state.session_metadata = {
-                    "id": None,
-                    "name": "",
-                    "description": "",
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "tags": "",
-                    "version": 1,
-                    "created_at": None,
-                    "updated_at": None,
-                    "last_saved": None,
-                    "has_unsaved_changes": False,
-                }
-                return False
-
-    return False
+    pass
 
 
 def render_session_list_ui():

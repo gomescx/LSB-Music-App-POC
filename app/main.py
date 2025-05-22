@@ -19,6 +19,8 @@ from app.ui import (
 from app.sessions import (
     render_session_metadata_ui,
     render_session_list_ui,
+    mark_session_changed,
+    save_current_session,
 )
 
 
@@ -29,6 +31,10 @@ def main():
 
     # Initialize session state
     initialize_session_state()
+
+    # Ensure show_exercise_selector is always initialized
+    if "show_exercise_selector" not in st.session_state:
+        st.session_state.show_exercise_selector = True
 
     # App header
     st.title("LSB Music App")
@@ -79,37 +85,6 @@ def main():
                 st.session_state.song_filter = ""
                 st.rerun()
 
-        # Session info
-        st.header("Session Details")
-        st.write(f"Exercises in session: {len(st.session_state.session_exercises)}")
-
-        # Session control buttons
-        if st.button("Clear Session"):
-            st.session_state.session_exercises = []
-            # Mark session changed for autosave
-            from app.sessions import mark_session_changed
-
-            mark_session_changed()
-            st.rerun()
-
-        # Toggle for exercise selector visibility
-        if "show_exercise_selector" not in st.session_state:
-            st.session_state.show_exercise_selector = True
-
-        # Create a callback for the checkbox
-        def toggle_exercise_selector():
-            st.session_state.show_exercise_selector = (
-                not st.session_state.show_exercise_selector
-            )
-
-        # Use the checkbox with on_change callback
-        st.checkbox(
-            "Show Exercise Selector",
-            value=st.session_state.show_exercise_selector,
-            key="show_exercise_selector_checkbox",
-            on_change=toggle_exercise_selector,
-        )
-
     # Define a helper function for rendering session components
     def render_session_components():
         # Session list first
@@ -118,10 +93,8 @@ def main():
         # Add a separator
         st.markdown("---")
 
-        # Then session metadata
-        if render_session_metadata_ui():
-            st.rerun()
-
+        # Refactored Session Metadata section (now in the session list column)
+        # Remove the old call to render_session_metadata_ui() here
         # Add another separator
         st.markdown("---")
 
@@ -142,10 +115,178 @@ def main():
 
         # Right column - Session components
         with col2:
-            render_session_components()
+            render_session_list()
+            st.markdown("---")
+            # Session Metadata Section
+            session_metadata = st.session_state.session_metadata
+            with st.expander("Session Metadata", expanded=False):
+                # Session ID display (if exists)
+                if session_metadata.get("id"):
+                    st.text(f"Session ID: {session_metadata['id']}")
+                # Last saved indicator
+                if session_metadata.get("last_saved"):
+                    from datetime import datetime
+                    last_saved = datetime.fromisoformat(session_metadata["last_saved"])
+                    st.text(f"Last saved: {last_saved.strftime('%H:%M:%S')}")
+                # Session name field
+                name = st.text_input(
+                    "Session Name*",
+                    value=session_metadata.get("name", ""),
+                    key="session_name_input",
+                )
+                if name != session_metadata.get("name", ""):
+                    session_metadata["name"] = name
+                    mark_session_changed()
+                # Date field
+                date_val = session_metadata.get("date", None)
+                from datetime import datetime
+                date = st.date_input(
+                    "Session Date",
+                    value=datetime.strptime(date_val, "%Y-%m-%d") if date_val else datetime.now(),
+                    key="session_date_input",
+                )
+                new_date = date.strftime("%Y-%m-%d")
+                if new_date != session_metadata.get("date", ""):
+                    session_metadata["date"] = new_date
+                    mark_session_changed()
+                # Description field
+                description = st.text_area(
+                    "Description",
+                    value=session_metadata.get("description", ""),
+                    key="session_description_input",
+                )
+                if description != session_metadata.get("description", ""):
+                    session_metadata["description"] = description
+                    mark_session_changed()
+                # Tags field
+                tags = st.text_input(
+                    "Tags",
+                    value=session_metadata.get("tags", ""),
+                    help="Enter tags in #tag format, separated by spaces",
+                    key="session_tags_input",
+                )
+                if tags != session_metadata.get("tags", ""):
+                    session_metadata["tags"] = tags
+                    mark_session_changed()
+                # Only show clear button if we have an existing session
+                if session_metadata.get("id"):
+                    if st.button("Clear Form", key="clear_session_button"):
+                        session_metadata.clear()
+                        session_metadata.update({
+                            "id": None,
+                            "name": "",
+                            "description": "",
+                            "date": datetime.now().strftime("%Y-%m-%d"),
+                            "tags": "",
+                            "version": 1,
+                            "created_at": None,
+                            "updated_at": None,
+                            "last_saved": None,
+                            "has_unsaved_changes": False,
+                        })
+                        st.rerun()
+            # --- End of Expander ---
+            # Unsaved changes alert below expander
+            if session_metadata.get("has_unsaved_changes", False):
+                st.warning("⚠️ Unsaved changes")
+            # Save Session button below alert
+            if st.button("Save Session", key="save_session_button"):
+                success, _, _ = save_current_session(show_message=True)
+                if success:
+                    st.rerun()
+            # Clear Session button (moved from sidebar)
+            if st.button("Clear Session", key="clear_session_button_main"):
+                st.session_state.session_exercises = []
+                mark_session_changed()
+                st.rerun()
+            st.markdown("---")
+            # Restore Load Session UI below metadata
+            if render_session_list_ui():
+                st.rerun()
+
     else:
         # Full-width layout when exercise selector is hidden
-        render_session_components()
+        # Place session list and metadata in sequence
+        render_session_list()
+        st.markdown("---")
+        # --- Session Metadata Section (refactored, same as above) ---
+        session_metadata = st.session_state.session_metadata
+        with st.expander("Session Metadata", expanded=False):
+            if session_metadata.get("id"):
+                st.text(f"Session ID: {session_metadata['id']}")
+            if session_metadata.get("last_saved"):
+                from datetime import datetime
+                last_saved = datetime.fromisoformat(session_metadata["last_saved"])
+                st.text(f"Last saved: {last_saved.strftime('%H:%M:%S')}")
+            name = st.text_input(
+                "Session Name*",
+                value=session_metadata.get("name", ""),
+                key="session_name_input",
+            )
+            if name != session_metadata.get("name", ""):
+                session_metadata["name"] = name
+                mark_session_changed()
+            date_val = session_metadata.get("date", None)
+            from datetime import datetime
+            date = st.date_input(
+                "Session Date",
+                value=datetime.strptime(date_val, "%Y-%m-%d") if date_val else datetime.now(),
+                key="session_date_input",
+            )
+            new_date = date.strftime("%Y-%m-%d")
+            if new_date != session_metadata.get("date", ""):
+                session_metadata["date"] = new_date
+                mark_session_changed()
+            description = st.text_area(
+                "Description",
+                value=session_metadata.get("description", ""),
+                key="session_description_input",
+            )
+            if description != session_metadata.get("description", ""):
+                session_metadata["description"] = description
+                mark_session_changed()
+            tags = st.text_input(
+                "Tags",
+                value=session_metadata.get("tags", ""),
+                help="Enter tags in #tag format, separated by spaces",
+                key="session_tags_input",
+            )
+            if tags != session_metadata.get("tags", ""):
+                session_metadata["tags"] = tags
+                mark_session_changed()
+            if session_metadata.get("id"):
+                if st.button("Clear Form", key="clear_session_button"):
+                    session_metadata.clear()
+                    session_metadata.update({
+                        "id": None,
+                        "name": "",
+                        "description": "",
+                        "date": datetime.now().strftime("%Y-%m-%d"),
+                        "tags": "",
+                        "version": 1,
+                        "created_at": None,
+                        "updated_at": None,
+                        "last_saved": None,
+                        "has_unsaved_changes": False,
+                    })
+                    st.rerun()
+        if session_metadata.get("has_unsaved_changes", False):
+            st.warning("⚠️ Unsaved changes")
+        button_col1, button_col2 = st.columns([1, 1])
+        with button_col1:
+            if st.button("Save Session", key="save_session_button"):
+                success, _, _ = save_current_session(show_message=True)
+                if success:
+                    st.rerun()
+        with button_col2:
+            if st.button("Clear Session", key="clear_session_button_main"):
+                st.session_state.session_exercises = []
+                mark_session_changed()
+                st.rerun()
+        st.markdown("---")
+        # Restore Load Session UI below metadata
+        if render_session_list_ui():
+            st.rerun()
 
 
 if __name__ == "__main__":
