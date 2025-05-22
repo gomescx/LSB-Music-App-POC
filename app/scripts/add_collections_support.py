@@ -7,7 +7,7 @@ import sqlite3
 import os
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "data" / "lsb_catalogue.db"
+DB_PATH = Path("/Users/claudiogomes/Desktop/Github/LSB-Music-App/data/lsb_catalogue.db")
 
 def column_exists(cursor, table, column):
     cursor.execute(f"PRAGMA table_info({table})")
