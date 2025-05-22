@@ -24,6 +24,7 @@ from app.db.queries import (
     get_songs_for_exercise,
     get_exercises_by_song_name,
     get_all_songs,  # <-- import the new function
+    get_exercise_phase_by_id,
 )
 from app.sessions import (
     initialize_session_metadata,
@@ -300,6 +301,11 @@ def render_session_list():
         # Get songs for this exercise
         songs = get_songs_for_exercise(exercise_id)
 
+        # Fetch the phase of the exercise
+        phase = get_exercise_phase_by_id(exercise_id)
+        phase_digits = list(str(int(phase))) if phase else []
+        phase_text = f"[{','.join(phase_digits)}]" if phase_digits else "[ ]"
+
         # --- Custom Music Selection Option ---
         # Insert the 'No song selected' and 'Custom music selection' options at the top
         song_options = {"📂 No song selected": None, "🎼 Custom music selection": "__custom__"}
@@ -335,7 +341,7 @@ def render_session_list():
             music_title = "📂 No song selected"
 
         # Create a single row with expander that includes all information
-        expander_title = f"💃 {i+1}. {display_name}"
+        expander_title = f"💃 {i+1}. {display_name} ∿ {phase_text}"
         if music_title:
             expander_title += f"    {music_title}"
         if duration_text:

@@ -577,3 +577,15 @@ def delete_session(session_id):
         return False
     finally:
         conn.close()
+
+
+def get_exercise_phase_by_id(exercise_id):
+    """Get the phase of an exercise by its ID."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT phase FROM exercises WHERE id = ?", (exercise_id,))
+        row = cursor.fetchone()
+        return row["phase"] if row else None
+    finally:
+        conn.close()

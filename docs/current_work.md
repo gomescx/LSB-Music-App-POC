@@ -1,5 +1,1 @@
-in app/ui.py on the Session list column:
-- turn the Session Metadata section to be expandable. 
-- leave the clear form button inside that expander. 
-- bring the Save Session button below that expander. 
-- make sure the <⚠️ Unsaved changes> alert is displayed below the expander and above the <Save Session> button
+in app/ui.py on the Session list column, def render_session_list(): at lines 249 to 268, add the phase of the exercise (as per exercise table, phase column) after the name between [], add an icon of a senoid or wave. e.g. ['icon' 1] or ['icon' 23] or ['icon' blank] 
