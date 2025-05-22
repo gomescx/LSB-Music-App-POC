@@ -115,3 +115,30 @@ For an exercise without a phase:
 
 - Test the UI changes in the application to confirm proper functionality.
 - Update any related documentation or user guides if necessary.
+
+---
+
+# Implementation Summary: Hide Column 1 (Available Exercises)
+
+## Objective
+Add a checkbox in the sidebar to toggle the visibility of Column 1 (Available exercises) in the LSB Music App.
+
+## Changes Made
+1. **Checkbox Addition**:
+   - Added a checkbox labeled "Show Available Exercises" in the sidebar.
+   - The checkbox state is stored in `st.session_state` for persistence.
+
+2. **Conditional Rendering**:
+   - Modified the layout to conditionally render Column 1 (Available exercises) based on the checkbox state.
+   - When the checkbox is unchecked, the exercise selector is hidden, and the session list occupies the full width.
+
+3. **Code Updates**:
+   - Updated `main.py` to include the checkbox and conditional rendering logic.
+
+## Testing
+- Verified that checking and unchecking the checkbox correctly shows and hides Column 1.
+- Ensured that other functionalities, such as session management and metadata display, remain unaffected.
+
+## Notes
+- The checkbox is initialized to `True` by default, ensuring that Column 1 is visible when the app is first loaded.
+- No additional scripts or dependencies were required for this implementation.

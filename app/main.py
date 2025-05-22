@@ -85,6 +85,11 @@ def main():
                 st.session_state.song_filter = ""
                 st.rerun()
 
+        # Checkbox to hide/show Column 1
+        st.session_state.show_exercise_selector = st.checkbox(
+            "Show Available Exercises", value=st.session_state.get("show_exercise_selector", True)
+        )
+
     # Define a helper function for rendering session components
     def render_session_components():
         # Session list first

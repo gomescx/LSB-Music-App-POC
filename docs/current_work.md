@@ -1,1 +1,1 @@
-in app/ui.py on the Session list column, def render_session_list(): at lines 249 to 268, add the phase of the exercise (as per exercise table, phase column) after the name between [], add an icon of a senoid or wave. e.g. ['icon' 1] or ['icon' 23] or ['icon' blank] 
+add a check box on the side bar to hide column 1 (Available exercises) from the screen.
