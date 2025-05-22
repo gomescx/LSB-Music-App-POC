@@ -2,20 +2,17 @@
 LSB Music App - Main Streamlit App
 """
 
+from pathlib import Path
 import streamlit as st
 import sys
-from pathlib import Path
 
 # Add the project root to Python path
 project_root = str(Path(__file__).parent.parent)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from app.ui import (
-    initialize_session_state,
-    render_exercise_selector,
-    render_session_list,
-)
+from app.ui import initialize_session_state
+from app.ui import exercise_selector, exercise_list
 from app.sessions import (
     render_session_metadata_ui,
     render_session_list_ui,
@@ -93,7 +90,7 @@ def main():
     # Define a helper function for rendering session components
     def render_session_components():
         # Session list first
-        render_session_list()
+        exercise_list.render_session_list()
 
         # Add a separator
         st.markdown("---")
@@ -114,13 +111,13 @@ def main():
 
         # Left column - Exercise selector
         with col1:
-            exercise_added = render_exercise_selector(selected_phase)
+            exercise_added = exercise_selector.render_exercise_selector(selected_phase)
             if exercise_added:
                 st.rerun()
 
         # Right column - Session components
         with col2:
-            render_session_list()
+            exercise_list.render_session_list()
             st.markdown("---")
             # Session Metadata Section
             session_metadata = st.session_state.session_metadata
@@ -212,7 +209,7 @@ def main():
     else:
         # Full-width layout when exercise selector is hidden
         # Place session list and metadata in sequence
-        render_session_list()
+        exercise_list.render_session_list()
         st.markdown("---")
         # --- Session Metadata Section (refactored, same as above) ---
         session_metadata = st.session_state.session_metadata

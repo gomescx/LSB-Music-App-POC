@@ -1,2 +1,3 @@
-As a user I want to change the order of the sequence of a tuple exercise - music on the current session list by assigning a number to that tuple
-So I no longer need to click several times on the Move Up or Move Down buttons
+ui.py has become too big and it's becoming difficult to manage the code.
+
+refactor it for better modularity and reuse. make sure you test it appropriately
