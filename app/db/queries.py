@@ -295,6 +295,23 @@ def get_exercises_by_song_name(song_name):
         conn.close()
 
 
+def get_all_songs():
+    """Get all songs in the catalogue with metadata."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT music_ref, title, artist, bpm, duration, filename, collection_cd
+            FROM musics
+            ORDER BY title
+            """
+        )
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
 # Session management functions
 
 
@@ -478,17 +495,17 @@ def get_session_by_id(session_id):
             )
             # Create tuple with four elements: exercise name, music ref, exercise ID, and notes
             # Check if the notes column exists and has a value
-            try:
-                notes = ex["notes"] if ex["notes"] is not None else ""
-            except (IndexError, KeyError):
-                notes = ""
+            # try:
+            #     notes = ex["notes"] if ex["notes"] is not None else ""
+            # except (IndexError, KeyError):
+            #     notes = ""
 
             session_exercises.append(
                 (
                     exercise_name,
                     ex["music_ref"],
                     ex["exercise_id"],  # Store the exercise ID for song retrieval
-                    notes,  # Include notes
+                    ex["notes"] if ex["notes"] is not None else "",  # Include notes
                 )
             )
 

@@ -23,6 +23,7 @@ from app.db.queries import (
     get_exercises_by_phase,
     get_songs_for_exercise,
     get_exercises_by_song_name,
+    get_all_songs,  # <-- import the new function
 )
 from app.sessions import (
     initialize_session_metadata,
@@ -299,6 +300,13 @@ def render_session_list():
         # Get songs for this exercise
         songs = get_songs_for_exercise(exercise_id)
 
+        # --- Custom Music Selection Option ---
+        # Insert the 'No song selected' and 'Custom music selection' options at the top
+        song_options = {"📂 No song selected": None, "🎼 Custom music selection": "__custom__"}
+        song_options.update({
+            f"{song['title']} - {song['artist']}": song["music_ref"] for song in songs
+        })
+
         # Extract the display name without ID for cleaner UI
         display_name = (
             exercise_name.split(" [id ")[0]
@@ -309,23 +317,20 @@ def render_session_list():
         # Prepare the music and duration information for the expander title
         music_title = ""
         duration_text = ""
-
+        song_details = None
         if selected_song:
-            song_details = next(
-                (song for song in songs if song["music_ref"] == selected_song), None
-            )
-            if song_details:
-                music_title = f"🎵 {song_details['title']}"
-                # Format duration as mm:ss if available
-                if song_details["duration"]:
-                    # Convert duration from hh:mm:ss to mm:ss
-                    duration_parts = song_details["duration"].split(":")
-                    if len(duration_parts) == 3:  # If duration includes hours
-                        duration_text = f" 🕒 {int(duration_parts[0]) * 60 + int(duration_parts[1]):02}:{int(duration_parts[2]):02}"
-                    else:  # If duration is already mm:ss
-                        duration_text = f" 🕒 {song_details['duration']}"
-            else:
-                music_title = "📂 No song selected"
+            song_details = next((song for song in songs if song["music_ref"] == selected_song), None)
+            if not song_details:
+                all_songs = get_all_songs()
+                song_details = next((song for song in all_songs if song["music_ref"] == selected_song), None)
+        if song_details:
+            music_title = f"🎵 {song_details['title']}"
+            if song_details["duration"]:
+                duration_parts = song_details["duration"].split(":")
+                if len(duration_parts) == 3:
+                    duration_text = f" 🕒 {int(duration_parts[0]) * 60 + int(duration_parts[1]):02}:{int(duration_parts[2]):02}"
+                else:
+                    duration_text = f" 🕒 {song_details['duration']}"
         else:
             music_title = "📂 No song selected"
 
@@ -365,9 +370,9 @@ def render_session_list():
                         st.session_state.open_expanders = set()
                     # Get the exercise above that we're swapping with
                     if i > 0:
-                        prev_exercise_name, _, prev_exercise_id = (
-                            st.session_state.session_exercises[i - 1]
-                        )
+                        prev_exercise_tuple = st.session_state.session_exercises[i - 1]
+                        prev_exercise_name = prev_exercise_tuple[0]
+                        prev_exercise_id = prev_exercise_tuple[2]
                         # Mark both expanders as open
                         st.session_state.open_expanders.add(
                             f"expander_{i}_{exercise_id}"
@@ -389,9 +394,9 @@ def render_session_list():
                         st.session_state.open_expanders = set()
                     # Get the exercise below that we're swapping with
                     if i < len(st.session_state.session_exercises) - 1:
-                        next_exercise_name, _, next_exercise_id = (
-                            st.session_state.session_exercises[i + 1]
-                        )
+                        next_exercise_tuple = st.session_state.session_exercises[i + 1]
+                        next_exercise_name = next_exercise_tuple[0]
+                        next_exercise_id = next_exercise_tuple[2]
                         # Mark both expanders as open
                         st.session_state.open_expanders.add(
                             f"expander_{i}_{exercise_id}"
@@ -419,23 +424,33 @@ def render_session_list():
                 st.write("No songs available for this exercise.")
             else:
                 # Create a list of song options with formatted display
-                song_options = {
-                    f"{song['title']} - {song['artist']}": song["music_ref"]
-                    for song in songs
-                }
+                song_options = {"🎼 Custom music selection": "__custom__"}
+                song_options.update({
+                    f"{song['title']} - {song['artist']}": song["music_ref"] for song in songs
+                })
 
                 # # Add a "No song selected" option at the top
                 # song_options = {"No song selected": None, **song_options}
 
 
-                # Get the current selection key
-                current_key = "No song selected"
-                if selected_song:
-                    # Find the key for the currently selected song
+                # Determine the current selection key
+                if selected_song is None:
+                    current_key = "📂 No song selected"
+                else:
+                    # Try to find the key for the currently selected song in mapped songs
                     for k, v in song_options.items():
                         if v == selected_song:
                             current_key = k
                             break
+                    else:
+                        # If not found, try to find it in all songs (custom selection)
+                        all_songs = get_all_songs()
+                        for song in all_songs:
+                            if song["music_ref"] == selected_song:
+                                current_key = f"{song['title']} - {song['artist']}"
+                                break
+                        else:
+                            current_key = "📂 No song selected"
 
                 # Create the selectbox for song selection
                 selected_option = st.selectbox(
@@ -449,30 +464,83 @@ def render_session_list():
                     ),
                 )
 
-                # Update the session state when a song is selected
-                new_song_ref = song_options[selected_option]
-                if new_song_ref != selected_song:
-                    # Ensure this expander stays open after rerun
-                    expander_key = f"expander_{i}_{exercise_id}"
-                    if "open_expanders" not in st.session_state:
-                        st.session_state.open_expanders = set()
-                    st.session_state.open_expanders.add(expander_key)
-
-                    # Get notes from the tuple (should be at index 3)
-                    # If not available, use empty string
-                    notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
-
-                    # Update the tuple with the new song reference and preserve notes
-                    st.session_state.session_exercises[i] = (
-                        exercise_name,
-                        new_song_ref,
-                        exercise_id,
-                        notes,
+                # --- Custom music selection logic ---
+                if song_options[selected_option] == "__custom__":
+                    all_songs = get_all_songs()
+                    custom_filter = st.text_input(
+                        "Filter songs by title:", "", key=f"custom_song_filter_{i}"
                     )
-                    mark_session_changed()
-                    # Immediately rerun to update the UI
-                    st.rerun()
-
+                    filtered_songs = [
+                        song for song in all_songs if custom_filter.lower() in song["title"].lower()
+                    ]
+                    custom_song_options = {
+                        f"{song['title']} - {song['artist']}": song["music_ref"] for song in filtered_songs
+                    }
+                    # Determine the current custom selection key if a custom song is already selected
+                    custom_current_key = "-- Select a song --"
+                    if selected_song:
+                        for k, v in custom_song_options.items():
+                            if v == selected_song:
+                                custom_current_key = k
+                                break
+                    custom_selected = st.selectbox(
+                        "Select any song from the catalogue:",
+                        options=["-- Select a song --"] + list(custom_song_options.keys()),
+                        key=f"custom_song_select_{i}",
+                        index=(
+                            ["-- Select a song --"] + list(custom_song_options.keys())
+                        ).index(custom_current_key) if custom_current_key in ["-- Select a song --"] + list(custom_song_options.keys()) else 0
+                    )
+                    if custom_selected != "-- Select a song --":
+                        new_song_ref = custom_song_options[custom_selected]
+                        if new_song_ref != selected_song:
+                            expander_key = f"expander_{i}_{exercise_id}"
+                            if "open_expanders" not in st.session_state:
+                                st.session_state.open_expanders = set()
+                            st.session_state.open_expanders.add(expander_key)
+                            notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
+                            st.session_state.session_exercises[i] = (
+                                exercise_name,
+                                new_song_ref,
+                                exercise_id,
+                                notes,
+                            )
+                            mark_session_changed()
+                            st.rerun()
+                elif song_options[selected_option] is not None:
+                    # ...existing code for mapped selection...
+                    new_song_ref = song_options[selected_option]
+                    if new_song_ref != selected_song:
+                        expander_key = f"expander_{i}_{exercise_id}"
+                        if "open_expanders" not in st.session_state:
+                            st.session_state.open_expanders = set()
+                        st.session_state.open_expanders.add(expander_key)
+                        notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
+                        st.session_state.session_exercises[i] = (
+                            exercise_name,
+                            new_song_ref,
+                            exercise_id,
+                            notes,
+                        )
+                        mark_session_changed()
+                        st.rerun()
+                else:
+                    # No song selected
+                    if selected_song is not None:
+                        expander_key = f"expander_{i}_{exercise_id}"
+                        if "open_expanders" not in st.session_state:
+                            st.session_state.open_expanders = set()
+                        st.session_state.open_expanders.add(expander_key)
+                        notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
+                        st.session_state.session_exercises[i] = (
+                            exercise_name,
+                            None,
+                            exercise_id,
+                            notes,
+                        )
+                        mark_session_changed()
+                        st.rerun()
+                
                 # Add notes text area for this exercise
                 st.write("### Notes")
                 notes_value = st.text_area(
@@ -502,59 +570,45 @@ def render_session_list():
                 st.write("---")
 
                 # Show song details if a song is selected
+                song_details = None
                 if selected_song:
-                    song_details = next(
-                        (song for song in songs if song["music_ref"] == selected_song),
-                        None,
-                    )
-
-                    if song_details:
-
-                        # Generate the file path
-                        file_path = get_song_file_path(song_details)
-
-                        # Create a container for audio player with consistent height
-                        audio_container = st.container()
-
-                        # Add audio player if a valid file path exists
-                        if file_path and not file_path.startswith("No music file"):
-                            # Check if the file actually exists on disk
-                            if os.path.exists(file_path):
-                                try:
-                                    with st.spinner("Loading audio..."):
-                                        audio_container.audio(
-                                            file_path, format="audio/*"
-                                        )
-                                except Exception as e:
-                                    audio_container.error(
-                                        f"Error playing audio: {str(e)}"
-                                    )
-                            else:
-                                audio_container.warning(
-                                    f"Audio file not found at location: `{os.path.basename(file_path)}`"
-                                )
+                    # Try mapped songs first
+                    song_details = next((song for song in songs if song["music_ref"] == selected_song), None)
+                    if not song_details:
+                        # Try all songs (custom selection)
+                        all_songs = get_all_songs()
+                        song_details = next((song for song in all_songs if song["music_ref"] == selected_song), None)
+                if song_details:
+                    file_path = get_song_file_path(song_details)
+                    audio_container = st.container()
+                    if file_path and not file_path.startswith("No music file"):
+                        if os.path.exists(file_path):
+                            try:
+                                with st.spinner("Loading audio..."):
+                                    audio_container.audio(file_path, format="audio/*")
+                            except Exception as e:
+                                audio_container.error(f"Error playing audio: {str(e)}")
                         else:
-                            audio_container.warning(
-                                "No audio file available for this song"
-                            )
-                        st.write("###### Song Details:")
-                        st.write(f"• **Title:** {song_details['title']}")
-
-                        # Display song details in two columns
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            st.write(f"• **Artist:** {song_details['artist']}")
-                            if song_details["recommendation"]:
-                                st.write(
-                                    f"• **Recommendation:** {song_details['recommendation']}"
-                                )
-
-                        with col2:
-                            st.write(f"• **Duration:** {song_details['duration']}")
-                            st.write(f"• **BPM:** {song_details['bpm']}")
-
-                        # Display file path
-                        st.write(f"• **File path:** `{file_path}`")
+                            audio_container.warning(f"Audio file not found at location: `{os.path.basename(file_path)}`")
+                    else:
+                        audio_container.warning("No audio file available for this song")
+                    st.write("###### Song Details:")
+                    st.write(f"• **Title:** {song_details['title']}")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"• **Artist:** {song_details['artist']}")
+                        # Fix: handle both dict and sqlite3.Row without .get()
+                        recommendation = None
+                        try:
+                            recommendation = song_details['recommendation']
+                        except (KeyError, IndexError):
+                            pass
+                        if recommendation:
+                            st.write(f"• **Recommendation:** {recommendation}")
+                    with col2:
+                        st.write(f"• **Duration:** {song_details['duration']}")
+                        st.write(f"• **BPM:** {song_details['bpm']}")
+                    st.write(f"• **File path:** `{file_path}`")
 
         # # Add a separator line between exercises for better visual separation
         # st.markdown("---")
