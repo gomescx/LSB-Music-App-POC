@@ -1,36 +1,30 @@
-# Implementation Summary: Playlist Export from Session
+"""
+Implementation summary for US 111 - Export Session Exercise - Music List to MS Word
+"""
 
-## Overview
+## US 111 - Export Session Exercise - Music List to MS Word
 
-A script `generate_playlist.py` was added to `app/scripts/` to generate an M3U playlist from the current session's selected songs, fulfilling the requirements in `docs/current_work.md`.
+### Overview
+This implementation allows users to export the current session (including all metadata and the exercise/music list) to a Microsoft Word (.docx) file. The export is triggered by a button in the session UI and the file is saved to the path defined by `EXPORT_PATH` in the `.env` file.
 
-## Key Details
+### Key Steps
+1. **Dependency Added:**
+   - Installed `python-docx` for Word file generation.
+2. **Script Created:**
+   - `app/scripts/export_session_to_word.py` handles the export logic, formatting metadata and a table of exercises/music as required.
+3. **UI Integration:**
+   - Added an "Export Session to Word" button to the session list UI (`app/ui/exercise_list.py`).
+   - On click, the current session metadata and exercises are passed to the export function, and the user is notified of success or failure.
+4. **Formatting:**
+   - The Word file includes all session metadata fields and a table with columns: [#, Exercise, Music, Duration, Notes].
+   - Music and exercise details are formatted as specified in the user story.
+5. **Path Handling:**
+   - The export path is determined by `EXPORT_PATH` in `.env`, with fallback to the current directory if not set.
 
-- Loads the session (by name or latest updated).
-- Reads `MUSIC_LIBRARY_PATH` from `.env`.
-- For each exercise in the session, finds the selected song and resolves its absolute path using the same logic as the app.
-- Only `.mp3` and `.m4a` files are included.
-- The playlist is named `<session name>.m3u` and written to the current directory.
-- The first line is `#EXTM3U` for Apple Music compatibility.
-- Song order matches the session order; duplicates are allowed.
+### Usage
+- Click the "Export Session to Word (.docx)" button in the session UI to generate the file.
+- The file will be saved in the export path and includes all required information for sharing or archiving sessions.
 
-## Usage
+---
 
-Activate your environment, then run:
-
-```bash
-source .venv/bin/activate
-python app/scripts/generate_playlist.py [--session SESSION_NAME]
-```
-
-If no session is specified, the most recently updated session is used.
-
-## Testing
-
-- The script was tested with sessions containing valid and invalid song selections.
-- Apple Music successfully imports the generated playlist if the referenced files are accessible.
-
-## Notes
-
-- The script uses the same file path logic as the app UI for consistency.
-- No changes were made to the session or music database schema.
+This completes the implementation for US 111.

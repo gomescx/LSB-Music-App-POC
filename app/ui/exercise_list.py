@@ -363,3 +363,14 @@ def render_session_list():
             st.success(f"Playlist exported to: {export_path} ({song_count} songs)")
         else:
             st.warning("No valid .mp3 or .m4a songs found in session. Playlist not created.")
+    # Export Session to Word Button (after playlist export)
+    export_word_clicked = st.button("Export Session to Word (.docx)", key="export_word_button")
+    if export_word_clicked:
+        from app.scripts.export_session_to_word import export_session_to_word
+        session_metadata = st.session_state.session_metadata
+        session_exercises = st.session_state.session_exercises
+        try:
+            word_path = export_session_to_word(session_metadata, session_exercises)
+            st.success(f"Session exported to Word: {word_path}")
+        except Exception as e:
+            st.error(f"Failed to export session to Word: {e}")
