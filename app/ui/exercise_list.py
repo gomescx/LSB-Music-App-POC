@@ -97,6 +97,7 @@ def render_session_list():
             if " [id " in exercise_name
             else exercise_name
         )
+        music_ref = selected_song
         music_title = ""
         duration_text = ""
         song_details = None
@@ -106,7 +107,7 @@ def render_session_list():
                 all_songs = get_all_songs()
                 song_details = next((song for song in all_songs if song["music_ref"] == selected_song), None)
         if song_details:
-            music_title = f"🎵 {song_details['title']}"
+            music_title = f"{song_details['title']}"
             if song_details["duration"]:
                 duration_parts = song_details["duration"].split(":")
                 if len(duration_parts) == 3:
@@ -115,9 +116,9 @@ def render_session_list():
                     duration_text = f" 🕒 {song_details['duration']}"
         else:
             music_title = "📂 No song selected"
-        expander_title = f"💃 {i+1}. {display_name} ∿ {phase_text}"
+        expander_title = f"  💃 {i+1}. {display_name} ∿ {phase_text}"
         if music_title:
-            expander_title += f"    {music_title}"
+            expander_title += f"    🎵  {music_ref} {music_title}"
         if duration_text:
             expander_title += f"    {duration_text}"
         if "open_expanders" not in st.session_state:
@@ -332,7 +333,7 @@ def render_session_list():
                     else:
                         audio_container.warning("No audio file available for this song")
                     st.write("###### Song Details:")
-                    st.write(f"• **Title:** {song_details['title']}")
+                    st.write(f"• **Title:** {song_details['music_ref']} {song_details['title']}")
                     col1, col2 = st.columns(2)
                     with col1:
                         st.write(f"• **Artist:** {song_details['artist']}")
@@ -344,7 +345,9 @@ def render_session_list():
                         if recommendation:
                             st.write(f"• **Recommendation:** {recommendation}")
                     with col2:
-                        st.write(f"• **Duration:** {song_details['duration']}")
+                        duration_parts = song_details["duration"].split(":")
+                        duration_text = f" 🕒 {int(duration_parts[0]) * 60 + int(duration_parts[1]):02}:{int(duration_parts[2]):02}"
+                        st.write(f"• **Duration:** {duration_text}")
                         st.write(f"• **BPM:** {song_details['bpm']}")
                     st.write(f"• **File path:** `{file_path}`")
     # Export Playlist Button (after session stats, before exercises)
