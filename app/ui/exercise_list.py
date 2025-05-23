@@ -347,3 +347,16 @@ def render_session_list():
                         st.write(f"• **Duration:** {song_details['duration']}")
                         st.write(f"• **BPM:** {song_details['bpm']}")
                     st.write(f"• **File path:** `{file_path}`")
+    # Export Playlist Button (after session stats, before exercises)
+    session_name = st.session_state.session_metadata.get("name", "Session")
+    export_clicked = st.button("Export Playlist (.m3u)", key="export_playlist_button")
+    if export_clicked:
+        from app.exporter import export_playlist
+        export_path, song_count = export_playlist(
+            session_name=session_name,
+            session_exercises=st.session_state.session_exercises
+        )
+        if export_path and song_count > 0:
+            st.success(f"Playlist exported to: {export_path} ({song_count} songs)")
+        else:
+            st.warning("No valid .mp3 or .m4a songs found in session. Playlist not created.")

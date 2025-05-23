@@ -1,20 +1,36 @@
-# Implementation Summary for Refactoring ui.py
+# Implementation Summary: Playlist Export from Session
 
 ## Overview
-- The monolithic `ui.py` was split into modular components for better maintainability and reuse.
-- New modules were created under `app/ui/`:
-  - `exercise_selector.py`: Handles exercise selection UI.
-  - `exercise_list.py`: Handles session list, reordering, and song selection UI.
-  - `components.py`: Contains shared UI helpers (e.g., `get_song_file_path`).
-  - `session_stats.py`: Placeholder for future session stats UI.
-- All UI logic was removed from `ui.py` except for session state initialization.
-- Imports in `main.py` were updated to use the new modular structure.
-- A test script (`app/scripts/test_refactored_ui.py`) was added to verify the refactored UI logic.
 
-## Folder Structure Alignment
-- The refactor follows the project’s folder structure and modularity guidelines as described in the README.
+A script `generate_playlist.py` was added to `app/scripts/` to generate an M3U playlist from the current session's selected songs, fulfilling the requirements in `docs/current_work.md`.
 
-## Developer Notes
-- All UI logic is now modular and can be reused or extended easily.
-- The main app and scripts should import UI components from their respective modules.
-- The refactor was tested for import errors and basic UI rendering.
+## Key Details
+
+- Loads the session (by name or latest updated).
+- Reads `MUSIC_LIBRARY_PATH` from `.env`.
+- For each exercise in the session, finds the selected song and resolves its absolute path using the same logic as the app.
+- Only `.mp3` and `.m4a` files are included.
+- The playlist is named `<session name>.m3u` and written to the current directory.
+- The first line is `#EXTM3U` for Apple Music compatibility.
+- Song order matches the session order; duplicates are allowed.
+
+## Usage
+
+Activate your environment, then run:
+
+```bash
+source .venv/bin/activate
+python app/scripts/generate_playlist.py [--session SESSION_NAME]
+```
+
+If no session is specified, the most recently updated session is used.
+
+## Testing
+
+- The script was tested with sessions containing valid and invalid song selections.
+- Apple Music successfully imports the generated playlist if the referenced files are accessible.
+
+## Notes
+
+- The script uses the same file path logic as the app UI for consistency.
+- No changes were made to the session or music database schema.
