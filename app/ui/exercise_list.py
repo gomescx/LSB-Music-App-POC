@@ -323,11 +323,21 @@ def render_session_list():
                     audio_container = st.container()
                     if file_path and not file_path.startswith("No music file"):
                         if os.path.exists(file_path):
-                            try:
-                                with st.spinner("Loading audio..."):
-                                    audio_container.audio(file_path, format="audio/*")
-                            except Exception as e:
-                                audio_container.error(f"Error playing audio: {str(e)}")
+                            # Use a session state flag to remember if the audio was loaded for this exercise
+                            audio_key = f"audio_loaded_{i}"
+                            if audio_key not in st.session_state:
+                                st.session_state[audio_key] = False
+                            if not st.session_state[audio_key]:
+                                load_audio = audio_container.button("Load Audio Player", key=f"load_audio_{i}")
+                                if load_audio:
+                                    st.session_state[audio_key] = True
+                                    st.rerun()
+                            if st.session_state[audio_key]:
+                                try:
+                                    with st.spinner("Loading audio..."):
+                                        audio_container.audio(file_path, format="audio/*")
+                                except Exception as e:
+                                    audio_container.error(f"Error playing audio: {str(e)}")
                         else:
                             audio_container.warning(f"Audio file not found at location: `{os.path.basename(file_path)}`")
                     else:
