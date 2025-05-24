@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature allows instructors to add notes to each exercise-music pair in a session. These notes can be used to capture personal cues, observations, or choreography instructions for future reference.
+This feature allows instructors to add notes to each exercise-music pair in a session. These notes can be used to capture personal cues, observations, or consigna instructions for future reference.
 
 ## Changes Made
 

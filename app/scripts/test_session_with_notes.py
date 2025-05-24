@@ -48,7 +48,7 @@ def create_test_session_with_notes():
             "SINUOUS CIRCLE [id 2]",
             "xBA34-13",
             "2",
-            "Some choreography instructions for exercise 2.",
+            "Some consigna instructions for exercise 2.",
         ),
         ("JOYOUS CIRCLE [id 4]", "IBF03-14", "4", "Personal cues: remember to smile!"),
         (

@@ -294,7 +294,7 @@ def render_session_list():
                         st.rerun()
                 st.write("### Notes")
                 notes_value = st.text_area(
-                    "Add personal cues, observations, or choreography instructions:",
+                    "Add personal cues, observations, or consigna instructions:",
                     value=exercise_notes,
                     key=f"notes_{i}_{exercise_id}",
                     height=100,
