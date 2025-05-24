@@ -121,27 +121,28 @@ def render_session_list():
             expander_title += f"    🎵  {music_ref} {music_title}"
         if duration_text:
             expander_title += f"    {duration_text}"
-        if "open_expanders" not in st.session_state:
-            st.session_state.open_expanders = set()
         expander_key = f"expander_{i}_{exercise_id}"
+        # Use a single open_expander_key instead of a set
+        if "open_expander_key" not in st.session_state:
+            st.session_state.open_expander_key = None
         with st.expander(
-            expander_title, expanded=(expander_key in st.session_state.open_expanders)
+            expander_title, expanded=(st.session_state.open_expander_key == expander_key)
         ) as expanded:
             if expanded:
-                st.session_state.open_expanders.add(expander_key)
-            elif expander_key in st.session_state.open_expanders:
-                st.session_state.open_expanders.remove(expander_key)
+                # Set this as the only open expander
+                st.session_state.open_expander_key = expander_key
+            elif st.session_state.open_expander_key == expander_key:
+                # If closed, clear the open expander key
+                st.session_state.open_expander_key = None
             st.write(f"**Exercise:** {exercise_name}")
             ctrl_col1, ctrl_col2, ctrl_col3, ctrl_col4 = st.columns([1, 1, 1, 2])
             with ctrl_col1:
                 if st.button("↑ Move Up", key=f"up_{i}", disabled=(i == 0)):
-                    if "open_expanders" not in st.session_state:
-                        st.session_state.open_expanders = set()
+                    # Keep the moved expander open
                     if i > 0:
                         prev_exercise_tuple = st.session_state.session_exercises[i - 1]
                         prev_exercise_id = prev_exercise_tuple[2]
-                        st.session_state.open_expanders.add(f"expander_{i}_{exercise_id}")
-                        st.session_state.open_expanders.add(f"expander_{i-1}_{prev_exercise_id}")
+                        st.session_state.open_expander_key = f"expander_{i-1}_{prev_exercise_id}"
                     move_exercise_up(i)
                     st.rerun()
             with ctrl_col2:
@@ -150,21 +151,17 @@ def render_session_list():
                     key=f"down_{i}",
                     disabled=(i == len(st.session_state.session_exercises) - 1),
                 ):
-                    if "open_expanders" not in st.session_state:
-                        st.session_state.open_expanders = set()
                     if i < len(st.session_state.session_exercises) - 1:
                         next_exercise_tuple = st.session_state.session_exercises[i + 1]
                         next_exercise_id = next_exercise_tuple[2]
-                        st.session_state.open_expanders.add(f"expander_{i}_{exercise_id}")
-                        st.session_state.open_expanders.add(f"expander_{i+1}_{next_exercise_id}")
+                        st.session_state.open_expander_key = f"expander_{i+1}_{next_exercise_id}"
                     move_exercise_down(i)
                     st.rerun()
             with ctrl_col3:
                 if st.button("✕ Remove", key=f"remove_{i}"):
-                    if "open_expanders" in st.session_state:
-                        expander_key = f"expander_{i}_{exercise_id}"
-                        if expander_key in st.session_state.open_expanders:
-                            st.session_state.open_expanders.remove(expander_key)
+                    # If removing the open expander, clear the key
+                    if st.session_state.open_expander_key == expander_key:
+                        st.session_state.open_expander_key = None
                     remove_exercise(i)
                     st.rerun()
             with ctrl_col4:
@@ -183,9 +180,7 @@ def render_session_list():
                     if insert_at > i:
                         insert_at -= 1
                     exercises.insert(insert_at, tuple_to_move)
-                    if "open_expanders" not in st.session_state:
-                        st.session_state.open_expanders = set()
-                    st.session_state.open_expanders.add(f"expander_{insert_at}_{exercise_id}")
+                    st.session_state.open_expander_key = f"expander_{insert_at}_{exercise_id}"
                     mark_session_changed()
                     st.rerun()
             if not songs:
@@ -248,10 +243,7 @@ def render_session_list():
                     if custom_selected != "-- Select a song --":
                         new_song_ref = custom_song_options[custom_selected]
                         if new_song_ref != selected_song:
-                            expander_key = f"expander_{i}_{exercise_id}"
-                            if "open_expanders" not in st.session_state:
-                                st.session_state.open_expanders = set()
-                            st.session_state.open_expanders.add(expander_key)
+                            st.session_state.open_expander_key = expander_key
                             notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
                             st.session_state.session_exercises[i] = (
                                 exercise_name,
@@ -264,10 +256,7 @@ def render_session_list():
                 elif song_options[selected_option] is not None:
                     new_song_ref = song_options[selected_option]
                     if new_song_ref != selected_song:
-                        expander_key = f"expander_{i}_{exercise_id}"
-                        if "open_expanders" not in st.session_state:
-                            st.session_state.open_expanders = set()
-                        st.session_state.open_expanders.add(expander_key)
+                        st.session_state.open_expander_key = expander_key
                         notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
                         st.session_state.session_exercises[i] = (
                             exercise_name,
@@ -279,10 +268,7 @@ def render_session_list():
                         st.rerun()
                 else:
                     if selected_song is not None:
-                        expander_key = f"expander_{i}_{exercise_id}"
-                        if "open_expanders" not in st.session_state:
-                            st.session_state.open_expanders = set()
-                        st.session_state.open_expanders.add(expander_key)
+                        st.session_state.open_expander_key = expander_key
                         notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
                         st.session_state.session_exercises[i] = (
                             exercise_name,
@@ -300,10 +286,7 @@ def render_session_list():
                     height=100,
                 )
                 if notes_value != exercise_notes:
-                    expander_key = f"expander_{i}_{exercise_id}"
-                    if "open_expanders" not in st.session_state:
-                        st.session_state.open_expanders = set()
-                    st.session_state.open_expanders.add(expander_key)
+                    st.session_state.open_expander_key = expander_key
                     st.session_state.session_exercises[i] = (
                         exercise_name,
                         selected_song,
@@ -331,6 +314,7 @@ def render_session_list():
                                 load_audio = audio_container.button("Load Audio Player", key=f"load_audio_{i}")
                                 if load_audio:
                                     st.session_state[audio_key] = True
+                                    st.session_state.open_expander_key = expander_key  # Ensure this expander stays open
                                     st.rerun()
                             if st.session_state[audio_key]:
                                 try:
