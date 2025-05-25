@@ -247,7 +247,7 @@ def get_songs_for_exercise(exercise_id):
             """
             SELECT 
                 m.music_ref, m.title, m.artist, m.bpm, m.duration, m.filename,
-                m.collection_cd, em.recommendation, em.specific_comment
+                m.collection_cd, m.v, m.s, m.c, m.a, m.t, em.recommendation, em.specific_comment
             FROM musics m
             JOIN exercise_music_mapping em ON m.music_ref = em.music_ref
             WHERE em.exercise_id = ?
@@ -302,7 +302,7 @@ def get_all_songs():
     try:
         cursor.execute(
             """
-            SELECT music_ref, title, artist, bpm, duration, filename, collection_cd
+            SELECT music_ref, title, artist, bpm, duration, filename, collection_cd, v, s, c, a, t
             FROM musics
             ORDER BY title
             """

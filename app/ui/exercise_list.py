@@ -33,6 +33,17 @@ def remove_exercise(index: int):
     st.session_state.session_exercises.pop(index)
     mark_session_changed()
 
+def get_vivencia_lines(song_dict):
+    """
+    Given a song dict or sqlite3.Row, return a formatted vivencia lines string, e.g. '🌀 [V,C]'.
+    Only include lines for which the value is not None and not empty.
+    """
+    vivencia_keys = ['v', 's', 'c', 'a', 't']
+    present = [k.upper() for k in vivencia_keys if (song_dict[k] if k in song_dict.keys() else None)]
+    if present:
+        return f"🌀 [{','.join(present)}]"
+    return ""
+
 def render_session_list():
     st.subheader("Current Session")
     if not st.session_state.session_exercises:
@@ -66,11 +77,27 @@ def render_session_list():
                     total_seconds += int(duration_parts[1])
     total_minutes += total_seconds // 60
     total_seconds %= 60
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.write(f"**Songs Selected:** {total_songs}/{total_exercises}")
     with col2:
         st.write(f"**Total Time:** {total_minutes}:{total_seconds:02d}")
+    # Vivencia line counts
+    vivencia_keys = ['v', 's', 'c', 'a', 't']
+    vivencia_counts = {k: 0 for k in vivencia_keys}
+    for exercise_tuple in st.session_state.session_exercises:
+        song_ref = exercise_tuple[1]
+        exercise_id = exercise_tuple[2]
+        if song_ref is not None:
+            songs = get_songs_for_exercise(exercise_id)
+            song_details = next((song for song in songs if song["music_ref"] == song_ref), None)
+            if song_details:
+                for k in vivencia_keys:
+                    if k in song_details.keys() and song_details[k]:
+                        vivencia_counts[k] += 1
+    vivencia_summary = " ".join([f"{k.upper()}:{vivencia_counts[k]}" for k in vivencia_keys if vivencia_counts[k] > 0])
+    with col3:
+        st.write(f"**Vivencial Lines 🌀 [{vivencia_summary}]**")
     st.markdown("---")
     for i, exercise_tuple in enumerate(st.session_state.session_exercises):
         if len(exercise_tuple) >= 4:
@@ -90,7 +117,10 @@ def render_session_list():
         phase_text = f"[{','.join(phase_digits)}]" if phase_digits else "[ ]"
         song_options = {"📂 No song selected": None, "🎼 Custom music selection": "__custom__"}
         song_options.update({
-            f"{song['title']} - {song['artist']}": song["music_ref"] for song in songs
+            f"{song['title']} - {song['artist']}" +
+            (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
+            (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
+            : song["music_ref"] for song in songs
         })
         display_name = (
             exercise_name.split(" [id ")[0]
@@ -100,6 +130,7 @@ def render_session_list():
         music_ref = selected_song
         music_title = ""
         duration_text = ""
+        vivencia_text = ""
         song_details = None
         if selected_song:
             song_details = next((song for song in songs if song["music_ref"] == selected_song), None)
@@ -111,16 +142,19 @@ def render_session_list():
             if song_details["duration"]:
                 duration_parts = song_details["duration"].split(":")
                 if len(duration_parts) == 3:
-                    duration_text = f" 🕒 {int(duration_parts[0]) * 60 + int(duration_parts[1]):02}:{int(duration_parts[2]):02}"
+                    duration_text = f" \U0001F551 {int(duration_parts[0]) * 60 + int(duration_parts[1]):02}:{int(duration_parts[2]):02}"
                 else:
-                    duration_text = f" 🕒 {song_details['duration']}"
+                    duration_text = f" \U0001F551 {song_details['duration']}"
+            vivencia_text = get_vivencia_lines(song_details)
         else:
-            music_title = "📂 No song selected"
-        expander_title = f"  💃 {i+1}. {display_name} ∿ {phase_text}"
+            music_title = "\U0001F4C2 No song selected"
+        expander_title = f"  \U0001F483 {i+1}. {display_name} ∿ {phase_text}"
         if music_title:
-            expander_title += f"    🎵  {music_ref} {music_title}"
+            expander_title += f"    \U0001F3B5  {music_ref} {music_title}"
         if duration_text:
             expander_title += f"    {duration_text}"
+        if vivencia_text:
+            expander_title += f"    {vivencia_text}"
         expander_key = f"expander_{i}_{exercise_id}"
         # Use a single open_expander_key instead of a set
         if "open_expander_key" not in st.session_state:
@@ -188,7 +222,10 @@ def render_session_list():
             else:
                 song_options = {"🎼 Custom music selection": "__custom__"}
                 song_options.update({
-                    f"{song['title']} - {song['artist']}": song["music_ref"] for song in songs
+                    f"{song['title']} - {song['artist']}" +
+                    (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
+                    (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
+                    : song["music_ref"] for song in songs
                 })
                 if selected_song is None:
                     current_key = "📂 No song selected"
@@ -224,7 +261,10 @@ def render_session_list():
                         song for song in all_songs if custom_filter.lower() in song["title"].lower()
                     ]
                     custom_song_options = {
-                        f"{song['title']} - {song['artist']}": song["music_ref"] for song in filtered_songs
+                        f"{song['title']} - {song['artist']}" +
+                        (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
+                        (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
+                        : song["music_ref"] for song in filtered_songs
                     }
                     custom_current_key = "-- Select a song --"
                     if selected_song:
