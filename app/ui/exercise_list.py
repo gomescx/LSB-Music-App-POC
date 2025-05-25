@@ -313,7 +313,10 @@ def render_session_list():
                             if not st.session_state[audio_key]:
                                 load_audio = audio_container.button("Load Audio Player", key=f"load_audio_{i}")
                                 if load_audio:
-                                    st.session_state[audio_key] = True
+                                    # Reset all other audio_loaded flags except for this one
+                                    for j in range(len(st.session_state.session_exercises)):
+                                        other_audio_key = f"audio_loaded_{j}"
+                                        st.session_state[other_audio_key] = (j == i)
                                     st.session_state.open_expander_key = expander_key  # Ensure this expander stays open
                                     st.rerun()
                             if st.session_state[audio_key]:
