@@ -254,17 +254,12 @@ def render_session_list():
                 )
                 if song_options[selected_option] == "__custom__":
                     all_songs = get_all_songs()
-                    custom_filter = st.text_input(
-                        "Filter songs by title:", "", key=f"custom_song_filter_{i}"
-                    )
-                    filtered_songs = [
-                        song for song in all_songs if custom_filter.lower() in song["title"].lower()
-                    ]
+                    # Remove the filter textbox and related filtering
                     custom_song_options = {
                         f"{song['title']} - {song['artist']}" +
                         (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
                         (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
-                        : song["music_ref"] for song in filtered_songs
+                        : song["music_ref"] for song in all_songs
                     }
                     custom_current_key = "-- Select a song --"
                     if selected_song:
