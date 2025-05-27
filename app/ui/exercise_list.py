@@ -45,7 +45,11 @@ def get_vivencia_lines(song_dict):
     return ""
 
 def render_session_list():
-    st.subheader("Current Session")
+    session_name = st.session_state.session_metadata.get("name", "").strip() if "session_metadata" in st.session_state else ""
+    if session_name:
+        st.subheader(f"Current Session: {session_name}")
+    else:
+        st.subheader("Current Session:")
     if not st.session_state.session_exercises:
         st.info(
             "No exercises added to session yet. Use the selector above to add exercises."
