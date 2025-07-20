@@ -123,3 +123,15 @@ Planned features:
 - ✅ Session saving and reloading
 - 🔜 Session export to Word and playlist files
 - 🔜 Song flow analysis / transition preview
+
+
+
+## 🚧 Project Status: POC Retired
+
+As of May 2025, this Streamlit-based Proof of Concept (POC) has been officially retired. 
+purpose in validating user needs and architecture.
+
+We are now transitioning to an MVP phase, built using FastAPI (backend) and React (fronte
+maintainability, and user experience.
+
+👉 For more information, see [POC_Retirement_Statement.md](docs/POC_Retirement_Statement.md)
