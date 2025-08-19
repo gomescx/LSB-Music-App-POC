@@ -40,8 +40,8 @@ def insert_exercises(exercises):
         cursor.executemany(
             """
             INSERT OR REPLACE INTO exercises 
-            (id, phase, category, name, short_name, aka, phase_reviewer) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (id, phase, category, name, short_name, aka, phase_reviewer, cimeb) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
@@ -52,6 +52,7 @@ def insert_exercises(exercises):
                     ex["short_name"],
                     ex["aka"],
                     ex["phase_reviewer"],
+                    ex.get("cimeb", 1),  # Default to Cimeb if not specified
                 )
                 for ex in exercises
             ],
@@ -587,5 +588,89 @@ def get_exercise_phase_by_id(exercise_id):
         cursor.execute("SELECT phase FROM exercises WHERE id = ?", (exercise_id,))
         row = cursor.fetchone()
         return row["phase"] if row else None
+    finally:
+        conn.close()
+
+
+def add_new_exercise(exercise_data):
+    """
+    Add a new exercise to the database.
+    
+    Args:
+        exercise_data: Dict containing exercise information
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            """
+            INSERT INTO exercises 
+            (id, phase, category, name, short_name, aka, phase_reviewer, cimeb) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                exercise_data["id"],
+                exercise_data["phase"],
+                exercise_data["category"],
+                exercise_data["name"],
+                exercise_data.get("short_name", ""),
+                exercise_data.get("aka", ""),
+                exercise_data.get("phase_reviewer", ""),
+                exercise_data.get("cimeb", 0),  # Default to non-Cimeb for new exercises
+            ),
+        )
+        conn.commit()
+        return True
+    except sqlite3.Error as e:
+        conn.rollback()
+        print(f"Error adding new exercise: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_exercises_by_cimeb_status(is_cimeb=True):
+    """Get exercises filtered by Cimeb status."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute(
+            "SELECT * FROM exercises WHERE cimeb = ? ORDER BY phase, id", 
+            (1 if is_cimeb else 0,)
+        )
+        return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def get_next_exercise_id():
+    """Get the next available exercise ID."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Get all existing numeric IDs
+        cursor.execute("SELECT id FROM exercises WHERE id GLOB '[0-9]*'")
+        existing_ids = [int(row["id"]) for row in cursor.fetchall() if row["id"].isdigit()]
+        
+        if not existing_ids:
+            return "1000"  # Start custom exercises from 1000
+        
+        # Find the next available ID starting from 1000
+        max_id = max(existing_ids)
+        next_id = max(max_id + 1, 1000)
+        
+        # Make sure the ID doesn't already exist
+        while True:
+            cursor.execute("SELECT id FROM exercises WHERE id = ?", (str(next_id),))
+            if not cursor.fetchone():
+                return str(next_id)
+            next_id += 1
+            
     finally:
         conn.close()

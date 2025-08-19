@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS exercises (
     short_name TEXT,                   -- IBFexSHORT FORM NAME
     aka TEXT,                          -- AKA
     phase_reviewer TEXT,               -- Phase_reviewer
+    cimeb BOOLEAN DEFAULT 1,           -- Whether the exercise is from Cimeb (1) or other facilitators (0)
     FOREIGN KEY (category) REFERENCES exercise_categories(category_name)
 );
 

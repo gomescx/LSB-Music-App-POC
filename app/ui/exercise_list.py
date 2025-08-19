@@ -221,79 +221,74 @@ def render_session_list():
                     st.session_state.open_expander_key = f"expander_{insert_at}_{exercise_id}"
                     mark_session_changed()
                     st.rerun()
+            
+            # Always show song selection options, regardless of whether there are recommended songs
             if not songs:
-                st.write("No songs available for this exercise.")
+                # If no recommended songs, show info and go directly to custom selection
+                st.info("ℹ️ No recommended songs for this exercise. You can select any song from the catalogue below.")
+                song_options = {"🎼 Select any song from the catalogue": "__custom__"}
             else:
-                song_options = {"🎼 Custom music selection": "__custom__"}
+                # If there are recommended songs, show them first with custom option
+                song_options = {"📂 No song selected": None, "🎼 Custom music selection": "__custom__"}
                 song_options.update({
                     f"{song['title']} - {song['artist']}" +
                     (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
                     (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
                     : song["music_ref"] for song in songs
                 })
-                if selected_song is None:
-                    current_key = "📂 No song selected"
+            
+            if selected_song is None:
+                current_key = "📂 No song selected" if songs else "🎼 Select any song from the catalogue"
+            else:
+                for k, v in song_options.items():
+                    if v == selected_song:
+                        current_key = k
+                        break
                 else:
-                    for k, v in song_options.items():
-                        if v == selected_song:
-                            current_key = k
+                    all_songs = get_all_songs()
+                    for song in all_songs:
+                        if song["music_ref"] == selected_song:
+                            current_key = f"{song['title']} - {song['artist']}"
                             break
                     else:
-                        all_songs = get_all_songs()
-                        for song in all_songs:
-                            if song["music_ref"] == selected_song:
-                                current_key = f"{song['title']} - {song['artist']}"
-                                break
-                        else:
-                            current_key = "📂 No song selected"
-                selected_option = st.selectbox(
-                    "Select a song:",
-                    options=list(song_options.keys()),
-                    key=f"song_select_{i}",
+                        current_key = "📂 No song selected" if songs else "🎼 Select any song from the catalogue"
+            
+            selected_option = st.selectbox(
+                "Select a song:",
+                options=list(song_options.keys()),
+                key=f"song_select_{i}",
+                index=(
+                    list(song_options.keys()).index(current_key)
+                    if current_key in song_options
+                    else 0
+                ),
+            )
+            
+            if song_options[selected_option] == "__custom__":
+                all_songs = get_all_songs()
+                # Remove the filter textbox and related filtering
+                custom_song_options = {
+                    f"{song['title']} - {song['artist']}" +
+                    (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
+                    (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
+                    : song["music_ref"] for song in all_songs
+                }
+                custom_current_key = "-- Select a song --"
+                if selected_song:
+                    for k, v in custom_song_options.items():
+                        if v == selected_song:
+                            custom_current_key = k
+                            break
+                custom_selected = st.selectbox(
+                    "Select any song from the catalogue:",
+                    options=["-- Select a song --"] + list(custom_song_options.keys()),
+                    key=f"custom_song_select_{i}",
                     index=(
-                        list(song_options.keys()).index(current_key)
-                        if current_key in song_options
-                        else 0
-                    ),
+                        ["-- Select a song --"] + list(custom_song_options.keys())
+                    ).index(custom_current_key) if custom_current_key in ["-- Select a song --"] + list(custom_song_options.keys()) else 0
                 )
-                if song_options[selected_option] == "__custom__":
-                    all_songs = get_all_songs()
-                    # Remove the filter textbox and related filtering
-                    custom_song_options = {
-                        f"{song['title']} - {song['artist']}" +
-                        (f"  \U0001F551 {song['duration']}" if song['duration'] else "") +
-                        (f"  {get_vivencia_lines(song)}" if get_vivencia_lines(song) else "")
-                        : song["music_ref"] for song in all_songs
-                    }
-                    custom_current_key = "-- Select a song --"
-                    if selected_song:
-                        for k, v in custom_song_options.items():
-                            if v == selected_song:
-                                custom_current_key = k
-                                break
-                    custom_selected = st.selectbox(
-                        "Select any song from the catalogue:",
-                        options=["-- Select a song --"] + list(custom_song_options.keys()),
-                        key=f"custom_song_select_{i}",
-                        index=(
-                            ["-- Select a song --"] + list(custom_song_options.keys())
-                        ).index(custom_current_key) if custom_current_key in ["-- Select a song --"] + list(custom_song_options.keys()) else 0
-                    )
-                    if custom_selected != "-- Select a song --":
-                        new_song_ref = custom_song_options[custom_selected]
-                        if new_song_ref != selected_song:
-                            st.session_state.open_expander_key = expander_key
-                            notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
-                            st.session_state.session_exercises[i] = (
-                                exercise_name,
-                                new_song_ref,
-                                exercise_id,
-                                notes,
-                            )
-                            mark_session_changed()
-                            st.rerun()
-                elif song_options[selected_option] is not None:
-                    new_song_ref = song_options[selected_option]
+                if custom_selected != "-- Select a song --":
+                    new_song_ref = custom_song_options[custom_selected]
                     if new_song_ref != selected_song:
                         st.session_state.open_expander_key = expander_key
                         notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
@@ -305,44 +300,62 @@ def render_session_list():
                         )
                         mark_session_changed()
                         st.rerun()
-                else:
-                    if selected_song is not None:
-                        st.session_state.open_expander_key = expander_key
-                        notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
-                        st.session_state.session_exercises[i] = (
-                            exercise_name,
-                            None,
-                            exercise_id,
-                            notes,
-                        )
-                        mark_session_changed()
-                        st.rerun()
-                st.write("### Notes")
-                notes_value = st.text_area(
-                    "Add personal cues, observations, or consigna instructions:",
-                    value=exercise_notes,
-                    key=f"notes_{i}_{exercise_id}",
-                    height=100,
-                )
-                if notes_value != exercise_notes:
+            elif song_options[selected_option] is not None:
+                new_song_ref = song_options[selected_option]
+                if new_song_ref != selected_song:
                     st.session_state.open_expander_key = expander_key
+                    notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
                     st.session_state.session_exercises[i] = (
                         exercise_name,
-                        selected_song,
+                        new_song_ref,
                         exercise_id,
-                        notes_value,
+                        notes,
                     )
                     mark_session_changed()
-                st.write("---")
-                song_details = None
-                if selected_song:
-                    song_details = next((song for song in songs if song["music_ref"] == selected_song), None)
-                    if not song_details:
-                        all_songs = get_all_songs()
-                        song_details = next((song for song in all_songs if song["music_ref"] == selected_song), None)
+                    st.rerun()
+            else:
+                if selected_song is not None:
+                    st.session_state.open_expander_key = expander_key
+                    notes = exercise_tuple[3] if len(exercise_tuple) >= 4 else ""
+                    st.session_state.session_exercises[i] = (
+                        exercise_name,
+                        None,
+                        exercise_id,
+                        notes,
+                    )
+                    mark_session_changed()
+                    st.rerun()
+            
+            # Notes Section - ALWAYS show, regardless of song selection
+            st.write("### Notes")
+            notes_value = st.text_area(
+                "Add personal cues, observations, or consigna instructions:",
+                value=exercise_notes,
+                key=f"notes_{i}_{exercise_id}",
+                height=100,
+            )
+            if notes_value != exercise_notes:
+                st.session_state.open_expander_key = expander_key
+                st.session_state.session_exercises[i] = (
+                    exercise_name,
+                    selected_song,
+                    exercise_id,
+                    notes_value,
+                )
+                mark_session_changed()
+            
+            # Audio Player and Song Details Section - ALWAYS check for selected song
+            if selected_song:
+                song_details = next((song for song in songs if song["music_ref"] == selected_song), None)
+                if not song_details:
+                    all_songs = get_all_songs()
+                    song_details = next((song for song in all_songs if song["music_ref"] == selected_song), None)
+                
                 if song_details:
+                    st.write("---")
                     file_path = get_song_file_path(song_details)
                     audio_container = st.container()
+                    
                     if file_path and not file_path.startswith("No music file"):
                         if os.path.exists(file_path):
                             # Use a session state flag to remember if the audio was loaded for this exercise
@@ -368,6 +381,8 @@ def render_session_list():
                             audio_container.warning(f"Audio file not found at location: `{os.path.basename(file_path)}`")
                     else:
                         audio_container.warning("No audio file available for this song")
+                    
+                    # Song Details Section
                     st.write("###### Song Details:")
                     st.write(f"• **Title:** {song_details['music_ref']} {song_details['title']}")
                     col1, col2 = st.columns(2)
@@ -386,6 +401,7 @@ def render_session_list():
                         st.write(f"• **Duration:** {duration_text}")
                         st.write(f"• **BPM:** {song_details['bpm']}")
                     st.write(f"• **File path:** `{file_path}`")
+    
     # Export Playlist Button (after session stats, before exercises)
     session_name = st.session_state.session_metadata.get("name", "Session")
     export_clicked = st.button("Export Playlist (.m3u)", key="export_playlist_button")

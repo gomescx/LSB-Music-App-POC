@@ -12,7 +12,7 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from app.ui import initialize_session_state
-from app.ui import exercise_selector, exercise_list
+from app.ui import exercise_selector, exercise_list, add_exercise
 from app.sessions import (
     render_session_metadata_ui,
     render_session_list_ui,
@@ -87,6 +87,10 @@ def main():
             "Show Available Exercises", value=st.session_state.get("show_exercise_selector", True)
         )
 
+        # Exercise Management Section
+        st.markdown("---")
+        add_exercise.render_exercise_management_sidebar()
+
     # Define a helper function for rendering session components
     def render_session_components():
         # Session list first
@@ -114,6 +118,13 @@ def main():
             exercise_added = exercise_selector.render_exercise_selector(selected_phase)
             if exercise_added:
                 st.rerun()
+            
+            # Show Add Exercise form if toggled
+            if st.session_state.get("show_add_exercise", False):
+                st.markdown("---")
+                exercise_added_from_form = add_exercise.render_add_exercise_form()
+                if exercise_added_from_form:
+                    st.rerun()
 
         # Right column - Session components
         with col2:
