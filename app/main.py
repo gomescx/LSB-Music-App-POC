@@ -115,16 +115,16 @@ def main():
 
         # Left column - Exercise selector
         with col1:
-            exercise_added = exercise_selector.render_exercise_selector(selected_phase)
-            if exercise_added:
-                st.rerun()
-            
-            # Show Add Exercise form if toggled
+            # Show Add Exercise form if toggled (render first so it's immediately visible)
             if st.session_state.get("show_add_exercise", False):
-                st.markdown("---")
                 exercise_added_from_form = add_exercise.render_add_exercise_form()
                 if exercise_added_from_form:
                     st.rerun()
+                st.markdown("---")
+            
+            exercise_added = exercise_selector.render_exercise_selector(selected_phase)
+            if exercise_added:
+                st.rerun()
 
         # Right column - Session components
         with col2:

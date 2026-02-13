@@ -154,6 +154,11 @@ def render_exercise_management_sidebar():
     # Button to toggle the add exercise form
     if st.button("➕ Add New Exercise", help="Add exercises from other facilitators"):
         st.session_state.show_add_exercise = not st.session_state.show_add_exercise
+        st.rerun()
+    
+    # Show visual feedback when form is open
+    if st.session_state.show_add_exercise:
+        st.info("📝 Add exercise form is open above")
     
     # Show/hide filter for Cimeb vs non-Cimeb exercises
     cimeb_filter = st.radio(
